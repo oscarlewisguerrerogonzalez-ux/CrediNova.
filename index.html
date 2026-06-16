@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrediNova - Conecta. Descubre. Crece.</title>
+    
+    <!-- Librerías Externas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Configuración de Colores Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            dark: '#0D1324',
+                            purple: '#7C3AED',
+                            blue: '#2563EB',
+                            green: '#06D6A0',
+                            bg: '#F4F6FA',
+                            gray: '#E2E8F0'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Estilos Personalizados -->
+    <style>
+        body { background-color: #F4F6FA; color: #0D1324; overflow-x: hidden; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Animaciones suaves */
+        .fade-in { animation: fadeIn 0.4s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .toast-enter { animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Simulación del Celular en el Banner */
+        .phone-mockup {
+            border: 8px solid #1e293b; border-radius: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: white; overflow: hidden; position: relative;
+        }
+        .phone-mockup::before {
+            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 40%; height: 20px; background: #1e293b; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; z-index: 10;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- HEADER (Navegación Superior) -->
+    <header class="bg-brand-dark text-white sticky top-0 z-40 shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Logo -->
+            <div class="flex items-center cursor-pointer transform transition hover:scale-105" onclick="renderHome()">
+                <div class="bg-gradient-to-br from-brand-blue to-brand-purple text-white p-2 rounded-lg mr-3 shadow-[0_0_15px_rgba(124,58,237,0.5)]">
+                    <i class="fa-solid fa-n text-2xl font-black"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight leading-none">CrediNova</h1>
+                    <p class="text-[10px] tracking-widest text-gray-400 uppercase hidden sm:block">Conecta. Descubre. Crece.</p>
+                </div>
+            </div>
+
+            <!-- Buscador -->
+            <div class="flex-grow max-w-2xl mx-4 hidden lg:flex">
+                <div class="flex w-full bg-white rounded-full overflow-hidden shadow-inner focus-within:ring-2 focus-within:ring-brand-purple transition">
+                    <input type="text" id="global-search" placeholder="Buscar productos, marcas o tiendas..." class="w-full px-6 py-2.5 text-gray-800 outline-none text-sm font-medium">
+                    <div class="border-l border-gray-200 flex items-center bg-gray-50 px-2 cursor-pointer">
+                        <select class="bg-transparent text-gray-600 text-xs font-bold outline-none cursor-pointer pr-2">
+                            <option>Todas las categorías</option><option>Tecnología</option><option>Moda</option>
+                        </select>
+                    </div>
+                    <button class="bg-brand-purple hover:bg-purple-700 text-white px-6 transition" onclick="renderCatalog()">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Botones y Perfil -->
+            <div class="flex items-center space-x-5">
+                <button class="text-gray-400 hover:text-white transition hidden md:block" onclick="showToast('Favoritos en construcción', 'info')"><i class="fa-regular fa-heart text-xl"></i></button>
+                
+                <button onclick="renderCart()" class="relative text-gray-300 hover:text-white transition">
+                    <i class="fa-solid fa-cart-shopping text-xl"></i>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-brand-purple text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">0</span>
+                </button>
+
+                <div id="auth-buttons" class="flex gap-2 items-center">
+                    <i class="fa-solid fa-circle-notch fa-spin text-brand-purple"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra secundaria -->
+        <div class="border-t border-gray-800 bg-[#0B101E]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex space-x-6 overflow-x-auto no-scrollbar text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <button class="hover:text-white flex items-center gap-2 whitespace-nowrap" onclick="renderCatalog()"><i class="fa-solid fa-bars"></i> Categorías</button>
+                <button class="hover:text-white whitespace-nowrap" onclick="renderHome()">Inicio</button>
+                <button class="hover:text-brand-green whitespace-nowrap" onclick="renderCatalog()"><i class="fa-solid fa-bolt"></i> Ofertas</button>
+                <button class="hover:text-white whitespace-nowrap" onclick="renderMyPurchases()">Mis Compras</button>
+                <button class="text-brand-purple bg-brand-purple/10 px-3 py-1 rounded whitespace-nowrap hover:bg-brand-purple/20 transition" onclick="renderSellerDashboard()">Vender en CrediNova</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="app-content"></main>
+
+    <!-- FOOTER -->
+    <footer class="bg-brand-dark text-white pt-12 pb-6 border-t border-gray-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-n text-brand-purple"></i> CrediNova</h3>
+                <p class="text-sm text-gray-400 mb-4">El marketplace colombiano donde compras a cuotas sin tarjetas y vendes a miles de clientes de forma segura.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-gray-200">Sobre nosotros</h4>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li><a href="#" class="hover:text-brand-purple">¿Cómo funciona el crédito?</a></li>
+                    <li><button onclick="renderSellerDashboard()" class="hover:text-brand-purple">Vender en CrediNova</button></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-gray-200">Legal</h4>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li><a href="#" class="hover:text-brand-purple">Términos y Condiciones</a></li>
+                    <li><a href="#" class="hover:text-brand-purple">Tratamiento de Datos</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-gray-200">Aliados Seguros</h4>
+                <div class="flex gap-4 text-2xl text-gray-400">
+                    <i class="fa-solid fa-building-columns" title="Bancos"></i>
+                    <i class="fa-solid fa-truck-fast" title="Logística"></i>
+                    <i class="fa-solid fa-shield-halved" title="SSL Seguro"></i>
+                </div>
+            </div>
+        </div>
+        <div class="text-center text-xs text-gray-600 border-t border-gray-800 pt-6">
+            <p>&copy; 2026 CrediNova S.A.S. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- MODALES Y NOTIFICACIONES -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+    <div id="modal-container" class="fixed inset-0 bg-brand-dark/90 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity p-4"></div>
+
+    <!-- SCRIPT PRINCIPAL: LÓGICA Y FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // =====================================================================
+        // LAS LLAVES EXACTAS DE TU PROYECTO (Extraídas de la imagen)
+        // =====================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAETMBFi4sWhvt-lrTzInETggb5Pog9xt8",
+            authDomain: "credinova-8bdf3.firebaseapp.com",
+            projectId: "credinova-8bdf3",
+            storageBucket: "credinova-8bdf3.firebasestorage.app",
+            messagingSenderId: "594487614922",
+            appId: "1:594487614922:web:6d2c32e2ee28e357b04333"
+        };
+        // =====================================================================
+
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            console.log("🔥 Firebase Conectado Exitosamente");
+        } catch (e) {
+            console.error("Error al iniciar Firebase:", e);
+        }
+
+        let globalProducts = [];
+        let globalOrders = [];
+        let currentUserData = null; 
+        
+        let cart = JSON.parse(localStorage.getItem('cn_cart')) || [];
+        const appContent = document.getElementById('app-content');
+        const modalContainer = document.getElementById('modal-container');
+
+        const formatMoney = (amount) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
+
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bg = type === 'success' ? 'bg-brand-green text-brand-dark' : type === 'error' ? 'bg-red-500 text-white' : 'bg-brand-purple text-white';
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-triangle-exclamation' : 'fa-info-circle';
+            
+            toast.className = `${bg} px-4 py-3 rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.2)] flex items-center gap-3 toast-enter font-bold text-sm z-50`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-lg"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('opacity-0', 'transition-opacity'); setTimeout(() => toast.remove(), 300); }, 3500);
+        };
+
+        window.updateCartUI = function() {
+            document.getElementById('cart-count').innerText = cart.length;
+            localStorage.setItem('cn_cart', JSON.stringify(cart));
+        };
+        updateCartUI();
+
+        if(db) {
+            // Productos
+            const qProducts = query(collection(db, "products"), orderBy("createdAt", "desc"));
+            onSnapshot(qProducts, (snapshot) => {
+                globalProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if(document.getElementById('home-products')) renderProductCards('home-products', globalProducts.slice(0, 8));
+                if(document.getElementById('catalog-products')) renderCatalog();
+            }, (error) => { console.error("Error productos:", error); });
+
+            // Autenticación (Mantiene la sesión iniciada)
+            onAuthStateChanged(auth, async (user) => {
+                const authDiv = document.getElementById('auth-buttons');
+                if (user) {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if(userDoc.exists()) {
+                        currentUserData = { uid: user.uid, ...userDoc.data() };
+                    } else {
+                        currentUserData = { uid: user.uid, email: user.email, name: "Usuario", isVerified: false };
+                    }
+                    
+                    authDiv.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-bold hidden md:block">${currentUserData.name.split(' ')[0]}</span>
+                            <div class="w-9 h-9 bg-brand-purple rounded-full flex items-center justify-center font-bold text-lg shadow-lg cursor-pointer text-white hover:ring-2 hover:ring-brand-green transition" onclick="renderSellerDashboard()">${currentUserData.name.charAt(0)}</div>
+                            <button onclick="logout()" class="text-gray-500 hover:text-red-500 ml-2 bg-gray-800 p-2 rounded-full transition" title="Cerrar sesión"><i class="fa-solid fa-power-off"></i></button>
+                        </div>`;
+                    
+                    loadMyOrders(user.email);
+                } else {
+                    currentUserData = null;
+                    authDiv.innerHTML = `
+                        <button onclick="showModal('login')" class="text-sm font-bold text-gray-300 hover:text-white transition hidden sm:block">Iniciar sesión</button>
+                        <button onclick="showModal('register')" class="bg-brand-purple hover:bg-purple-600 text-sm font-bold px-5 py-2.5 rounded-lg transition shadow-[0_4px_15px_rgba(124,58,237,0.4)] text-white">Registrarse</button>`;
+                }
+            });
+        }
+
+        function loadMyOrders(email) {
+            const qOrders = query(collection(db, "orders"));
+            onSnapshot(qOrders, (snapshot) => {
+                let allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                globalOrders = allOrders.filter(o => o.buyerEmail === email || o.sellerEmail === email);
+                if(document.getElementById('purchases-list')) renderMyPurchases();
+            });
+        }
+
+        window.handleRegister = async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-register');
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Creando cuenta...`; btn.disabled = true;
+
+            const name = document.getElementById('r-name').value;
+            const email = document.getElementById('r-email').value;
+            const pass = document.getElementById('r-pass').value;
+
+            try {
+                const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+                await setDoc(doc(db, "users", userCred.user.uid), { name, email, isVerified: false, createdAt: Date.now() });
+                closeModal(); showToast('¡Cuenta creada! Bienvenido a CrediNova.');
+                renderHome();
+            } catch (error) {
+                showToast(error.message.includes('email-already') ? 'El correo ya existe.' : 'Error al registrarse', 'error');
+                btn.innerHTML = `Completar Registro`; btn.disabled = false;
+            }
+        };
+
+        window.handleLogin = async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login');
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Entrando...`; btn.disabled = true;
+
+            try {
+                await signInWithEmailAndPassword(auth, document.getElementById('l-email').value, document.getElementById('l-pass').value);
+                closeModal(); showToast('¡Hola de nuevo!'); renderHome();
+            } catch (error) {
+                showToast("Correo o contraseña incorrectos", 'error');
+                btn.innerHTML = `Entrar`; btn.disabled = false;
+            }
+        };
+
+        window.handleResetPassword = async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-reset');
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...`; btn.disabled = true;
+
+            try {
+                await sendPasswordResetEmail(auth, document.getElementById('reset-email').value);
+                closeModal(); showToast('Te enviamos un enlace al correo para recuperar tu contraseña.', 'success');
+            } catch (error) {
+                showToast("Error. Verifica que el correo esté bien escrito.", 'error');
+                btn.innerHTML = `Enviar enlace de recuperación`; btn.disabled = false;
+            }
+        };
+
+        window.logout = function() { signOut(auth).then(() => { showToast("Has cerrado sesión"); renderHome(); }); };
+
+        window.renderHome = function() {
+            let html = `
+                <div class="fade-in space-y-12">
+                    <!-- Hero Banner -->
+                    <div class="bg-brand-dark rounded-[2rem] p-8 md:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-8 border border-gray-800">
+                        <div class="absolute top-0 right-0 w-96 h-96 bg-brand-purple rounded-full mix-blend-screen filter blur-[100px] opacity-40"></div>
+                        <div class="absolute bottom-0 left-20 w-72 h-72 bg-brand-blue rounded-full mix-blend-screen filter blur-[80px] opacity-30"></div>
+                        
+                        <div class="w-full md:w-3/5 relative z-10 text-white">
+                            <span class="bg-brand-purple/20 border border-brand-purple text-brand-purple text-xs font-bold px-3 py-1 rounded-full mb-6 inline-block">Tu Marketplace de Confianza</span>
+                            <h2 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">Descubre, compra <br> y vende en <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-brand-green">CrediNova</span></h2>
+                            <p class="text-gray-300 mb-8 text-lg max-w-lg font-light">El marketplace colombiano donde compras a cuotas y conectas con miles de compradores sin salir de casa.</p>
+                            <div class="flex flex-wrap gap-4">
+                                <button onclick="renderCatalog()" class="bg-brand-purple hover:bg-purple-600 text-white font-bold py-3 px-8 rounded-xl transition shadow-[0_4px_15px_rgba(124,58,237,0.5)]">Comprar ahora</button>
+                                <button onclick="renderSellerDashboard()" class="bg-white/10 hover:bg-white/20 border border-gray-600 hover:border-gray-400 text-white font-bold py-3 px-8 rounded-xl transition backdrop-blur-sm">Vender Gratis</button>
+                            </div>
+                        </div>
+
+                        <!-- App Mockup -->
+                        <div class="w-full md:w-2/5 flex justify-center z-10 hidden sm:flex">
+                            <div class="phone-mockup w-64 h-[420px] flex flex-col bg-brand-bg relative">
+                                <div class="bg-brand-dark p-4 pt-8 text-white rounded-b-3xl shadow-sm">
+                                    <div class="flex items-center gap-2 mb-4"><i class="fa-solid fa-n text-brand-purple text-xl"></i><span class="font-bold">CrediNova</span></div>
+                                    <div class="bg-white/10 rounded-full h-8 w-full"></div>
+                                </div>
+                                <div class="p-4 grid grid-cols-2 gap-3 mt-2">
+                                    <div class="bg-white rounded-xl h-24 shadow-sm border border-gray-100 flex items-center justify-center flex-col gap-2 text-brand-blue"><i class="fa-solid fa-laptop text-2xl"></i><span class="text-[10px] font-bold text-gray-600">Tecnología</span></div>
+                                    <div class="bg-white rounded-xl h-24 shadow-sm border border-gray-100 flex items-center justify-center flex-col gap-2 text-brand-purple"><i class="fa-solid fa-shirt text-2xl"></i><span class="text-[10px] font-bold text-gray-600">Moda</span></div>
+                                    <div class="bg-white rounded-xl h-24 shadow-sm border border-gray-100 flex items-center justify-center flex-col gap-2 text-brand-green"><i class="fa-solid fa-house text-2xl"></i><span class="text-[10px] font-bold text-gray-600">Hogar</span></div>
+                                    <div class="bg-brand-purple rounded-xl h-24 shadow-sm flex items-center justify-center flex-col gap-2 text-white"><i class="fa-solid fa-tag text-2xl"></i><span class="text-[10px] font-bold">Ofertas</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ofertas en Vivo -->
+                    <div>
+                        <div class="flex justify-between items-end mb-6 border-b border-gray-200 pb-2">
+                            <h3 class="text-2xl font-bold text-brand-dark">Publicaciones <span class="text-brand-purple">recientes</span></h3>
+                            <button onclick="renderCatalog()" class="text-brand-blue text-sm font-bold hover:underline">Ver catálogo</button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6" id="home-products">
+                            <div class="col-span-full py-10 text-center text-gray-400 font-medium"><i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2 text-brand-purple"></i><br>Cargando productos de la nube...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            appContent.innerHTML = html;
+            if(globalProducts.length > 0) renderProductCards('home-products', globalProducts.slice(0, 8));
+        };
+
+        function renderProductCards(containerId, productsToRender) {
+            const container = document.getElementById(containerId);
+            if(!container) return;
+            
+            if(productsToRender.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-16 bg-white rounded-2xl border-2 border-dashed border-gray-300 text-gray-500"><i class="fa-solid fa-box-open text-4xl mb-3 text-gray-300"></i><br><p class="font-bold text-lg">Aún no hay productos</p><p class="text-sm">¡Sé el primero en vender publicando algo!</p></div>`;
+                return;
+            }
+
+            container.innerHTML = productsToRender.map(p => `
+                <div class="bg-white rounded-[1.5rem] shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col relative cursor-pointer overflow-hidden group" onclick="renderProductDetail('${p.id}')">
+                    <button class="absolute top-3 right-3 bg-white/90 backdrop-blur w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 shadow-sm z-10 transition transform hover:scale-110" onclick="event.stopPropagation(); showToast('Añadido a favoritos'); this.classList.replace('text-gray-300','text-red-500');"><i class="fa-solid fa-heart"></i></button>
+                    
+                    <div class="h-52 bg-gray-50 overflow-hidden relative p-4 flex items-center justify-center">
+                        <img src="${p.image}" onerror="this.src='https://placehold.co/600x600/e2e8f0/0D1324?text=Foto+No+Disponible'" class="max-w-full max-h-full object-contain group-hover:scale-105 transition duration-500 drop-shadow-md rounded-lg">
+                    </div>
+                    
+                    <div class="p-5 flex-grow flex flex-col justify-between border-t border-gray-50">
+                        <div>
+                            <p class="text-[10px] font-black text-brand-purple uppercase tracking-wider mb-1">${p.category}</p>
+                            <h4 class="font-bold text-gray-800 leading-tight mb-2 line-clamp-2">${p.name}</h4>
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-2xl font-black text-brand-dark">${formatMoney(p.price)}</p>
+                            <p class="text-[11px] text-brand-blue font-bold mt-1 bg-blue-50 inline-block px-2 py-1 rounded-md border border-blue-100"><i class="fa-solid fa-wallet"></i> 3x ${formatMoney(p.price/3)} con Addi</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.renderCatalog = function() {
+            appContent.innerHTML = `
+                <div class="fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-3xl font-bold text-brand-dark">Catálogo Completo</h2>
+                        <button onclick="renderHome()" class="text-gray-500 hover:text-brand-dark font-bold text-sm"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="catalog-products"></div>
+                </div>
+            `;
+            renderProductCards('catalog-products', globalProducts);
+        };
+
+        window.renderProductDetail = function(id) {
+            const p = globalProducts.find(x => x.id === id);
+            if(!p) return;
+
+            appContent.innerHTML = `
+                <div class="fade-in bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 md:p-10 max-w-5xl mx-auto flex flex-col md:flex-row gap-10">
+                    <div class="w-full md:w-1/2">
+                        <button onclick="renderHome()" class="mb-4 text-gray-400 hover:text-brand-dark font-bold text-sm flex items-center gap-2 transition"><i class="fa-solid fa-arrow-left"></i> Atrás</button>
+                        <div class="bg-gray-50 rounded-[2rem] border border-gray-100 overflow-hidden flex items-center justify-center p-8 h-[450px]">
+                            <img src="${p.image}" onerror="this.src='https://placehold.co/600x600/e2e8f0/0D1324?text=Foto+No+Disponible'" class="max-w-full max-h-full object-contain drop-shadow-xl rounded-xl">
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-1/2 flex flex-col justify-center">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="bg-brand-purple/10 text-brand-purple text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider border border-brand-purple/20">${p.category}</span>
+                            <span class="text-gray-500 text-xs font-bold"><i class="fa-solid fa-location-dot text-red-500"></i> ${p.location}</span>
+                        </div>
+                        
+                        <h1 class="text-3xl md:text-4xl font-extrabold text-brand-dark mb-2 leading-tight">${p.name}</h1>
+                        <p class="text-sm text-gray-500 font-medium mb-6 flex items-center gap-2"><i class="fa-solid fa-shop text-gray-400"></i> Vendedor: <span class="text-brand-blue">${p.sellerName}</span></p>
+                        
+                        <p class="text-gray-600 text-sm mb-6 leading-relaxed bg-brand-bg p-5 rounded-2xl border border-gray-200 shadow-inner">${p.desc}</p>
+                        
+                        <div class="mb-6">
+                            <p class="text-5xl font-black text-brand-dark tracking-tight">${formatMoney(p.price)}</p>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100 mb-8 relative">
+                            <div class="absolute -top-3 right-4 bg-brand-green text-brand-dark text-[10px] font-black px-3 py-1 rounded shadow-sm uppercase tracking-wider">Aprobación rápida</div>
+                            <h4 class="font-bold text-brand-dark mb-3 text-sm flex items-center gap-2"><i class="fa-solid fa-wallet text-brand-blue"></i> Paga a cuotas con Aliados</h4>
+                            <div class="flex items-center justify-between p-4 bg-white border border-blue-200 rounded-xl shadow-sm">
+                                <span class="font-black text-blue-600 text-lg tracking-tight">Addi</span>
+                                <span class="text-sm font-medium text-gray-600">3 x <strong class="text-brand-dark text-lg">${formatMoney(p.price/3)}</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                            <button class="w-full sm:w-1/2 bg-white border-2 border-brand-dark text-brand-dark font-bold py-4 rounded-xl transition flex justify-center items-center gap-2 hover:bg-gray-50" onclick="addToCart('${p.id}')">
+                                <i class="fa-solid fa-cart-plus"></i> Al carrito
+                            </button>
+                            <button class="w-full sm:w-1/2 bg-brand-purple hover:bg-purple-600 text-white font-bold py-4 rounded-xl shadow-[0_4px_15px_rgba(124,58,237,0.4)] transition" onclick="addToCart('${p.id}'); renderCart();">
+                                Comprar Ahora
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        window.addToCart = function(id) {
+            const p = globalProducts.find(x => x.id === id);
+            if(p) { cart.push(p); updateCartUI(); showToast('Producto agregado al carrito'); }
+        };
+
+        window.renderCart = function() {
+            if(cart.length === 0) {
+                appContent.innerHTML = `<div class="text-center py-24 fade-in bg-white rounded-3xl border border-gray-100 max-w-3xl mx-auto shadow-sm"><div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-100"><i class="fa-solid fa-cart-shopping text-4xl text-gray-300"></i></div><h2 class="text-2xl font-bold text-gray-700">Tu carrito está vacío</h2><button onclick="renderCatalog()" class="mt-4 text-brand-blue font-bold hover:underline">Explorar productos</button></div>`;
+                return;
+            }
+
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+            appContent.innerHTML = `
+                <div class="fade-in max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
+                    <div class="w-full md:w-2/3 bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold mb-6 border-b border-gray-100 pb-4 text-brand-dark">Tu Carrito (${cart.length})</h2>
+                        <div class="divide-y divide-gray-100">
+                            ${cart.map((item, index) => `
+                                <div class="py-5 flex gap-4 items-center group">
+                                    <img src="${item.image}" onerror="this.src='https://placehold.co/100'" class="w-20 h-20 rounded-xl object-contain bg-gray-50 border border-gray-100 p-1">
+                                    <div class="flex-grow">
+                                        <h4 class="font-bold text-gray-800 text-lg">${item.name}</h4>
+                                        <p class="text-xs text-gray-500 font-medium mt-1">Vendedor: ${item.sellerName}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-black text-xl text-brand-dark">${formatMoney(item.price)}</p>
+                                        <button onclick="removeFromCart(${index})" class="text-xs text-red-500 font-bold hover:underline mt-2 opacity-70 hover:opacity-100 transition"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-1/3">
+                        <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 md:p-8 sticky top-24">
+                            <h3 class="text-xl font-bold mb-6 text-brand-dark">Resumen de compra</h3>
+                            <div class="flex justify-between items-center mb-4 text-sm font-medium text-gray-600"><span>Subtotal</span><span>${formatMoney(total)}</span></div>
+                            <div class="flex justify-between items-center mb-4 text-sm font-bold text-brand-green"><span>Envío</span><span>Gratis</span></div>
+                            
+                            <div class="flex justify-between items-center border-t border-gray-100 pt-6 mb-8">
+                                <span class="font-bold text-gray-800 text-lg">Total</span>
+                                <span class="text-3xl font-black text-brand-dark tracking-tight">${formatMoney(total)}</span>
+                            </div>
+                            
+                            ${!currentUserData ? 
+                                `<button onclick="showModal('login')" class="w-full bg-brand-dark hover:bg-black text-white font-bold py-4 rounded-xl mb-3 transition shadow-lg">Inicia sesión para pagar</button>` 
+                                : 
+                                `<button onclick="processCheckout()" id="btn-checkout" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-4 rounded-xl shadow-[0_4px_15px_rgba(124,58,237,0.4)] transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-lock"></i> Aprobar y Comprar
+                                </button>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        window.removeFromCart = function(index) {
+            cart.splice(index, 1); updateCartUI(); renderCart();
+        };
+
+        window.processCheckout = async function() {
+            const btn = document.getElementById('btn-checkout');
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Procesando Pago...`; btn.disabled = true;
+            
+            setTimeout(async () => {
+                try {
+                    for(let item of cart) {
+                        await addDoc(collection(db, "orders"), {
+                            productId: item.id, name: item.name, price: item.price, image: item.image,
+                            buyerEmail: currentUserData.email, buyerName: currentUserData.name,
+                            sellerEmail: item.sellerEmail, sellerName: item.sellerName,
+                            orderId: 'TRX-' + Math.floor(Math.random() * 900000),
+                            status: 'Preparando Envío', date: new Date().toLocaleDateString(), timestamp: Date.now()
+                        });
+                    }
+                    cart = []; updateCartUI();
+                    
+                    appContent.innerHTML = `
+                        <div class="fade-in max-w-lg mx-auto bg-white rounded-[2rem] shadow-xl p-10 text-center border-t-8 border-brand-green mt-10 relative overflow-hidden">
+                            <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-check text-4xl text-brand-green"></i></div>
+                            <h2 class="text-3xl font-black text-brand-dark mb-2">¡Pago Aprobado!</h2>
+                            <p class="text-gray-500 mb-8 font-medium">Los vendedores han sido notificados. Tu dinero está protegido en custodia hasta que recibas los paquetes.</p>
+                            <button onclick="renderMyPurchases()" class="w-full bg-brand-dark hover:bg-black text-white font-bold py-4 rounded-xl transition shadow-lg">Rastrear Mis Compras</button>
+                        </div>
+                    `;
+                } catch (error) { showToast("Error procesando pago: " + error.message, "error"); }
+            }, 2500);
+        };
+
+        window.renderMyPurchases = function() {
+            if(!currentUserData) return showModal('login');
+            
+            const misCompras = globalOrders.filter(o => o.buyerEmail === currentUserData.email).sort((a,b) => b.timestamp - a.timestamp);
+
+            if(misCompras.length === 0) {
+                appContent.innerHTML = `<div class="text-center py-24 fade-in bg-white rounded-3xl border border-gray-100 max-w-3xl mx-auto"><i class="fa-solid fa-box-open text-5xl text-gray-200 mb-4"></i><h2 class="text-2xl font-bold text-brand-dark">Aún no tienes compras</h2><button onclick="renderCatalog()" class="mt-4 text-brand-purple font-bold">Ir de compras</button></div>`;
+                return;
+            }
+
+            appContent.innerHTML = `
+                <div class="fade-in max-w-4xl mx-auto" id="purchases-list">
+                    <h2 class="text-3xl font-bold mb-8 text-brand-dark">Mis Compras y Rastreo</h2>
+                    <div class="space-y-6">
+                        ${misCompras.map(order => `
+                            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-2 h-full bg-brand-blue"></div>
+                                <img src="${order.image}" onerror="this.src='https://placehold.co/100'" class="w-24 h-24 rounded-2xl object-contain bg-gray-50 p-2 border border-gray-100">
+                                <div class="flex-grow w-full">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h4 class="font-bold text-lg md:text-xl text-gray-800">${order.name}</h4>
+                                        <span class="bg-blue-50 text-brand-blue text-xs font-black px-3 py-1.5 rounded-md border border-blue-100 uppercase tracking-wider">${order.status}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 font-medium">Guía: <strong class="text-brand-dark">${order.orderId}</strong> | Vendedor: ${order.sellerName}</p>
+                                    <p class="font-black text-brand-dark text-xl mt-2">${formatMoney(order.price)}</p>
+                                    
+                                    <div class="mt-6 w-full bg-gray-100 rounded-full h-2">
+                                        <div class="bg-brand-blue h-2 rounded-full relative" style="width: 33%">
+                                            <div class="absolute -right-2 -top-1.5 w-5 h-5 bg-white border-4 border-brand-blue rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between text-[10px] text-gray-400 font-black mt-2 uppercase tracking-wider">
+                                        <span class="text-brand-blue">Aprobado</span><span>En Bodega</span><span>Entregado</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        };
+
+        window.renderSellerDashboard = function() {
+            if(!currentUserData) return showModal('login');
+            
+            if(!currentUserData.isVerified) {
+                appContent.innerHTML = `
+                    <div class="fade-in max-w-2xl mx-auto bg-white rounded-[2rem] p-10 text-center shadow-lg border border-gray-100 mt-10">
+                        <div class="w-24 h-24 bg-brand-purple/10 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-id-card text-5xl text-brand-purple"></i></div>
+                        <h2 class="text-3xl font-bold mb-3 text-brand-dark">Verifica tu Identidad</h2>
+                        <p class="text-gray-500 mb-8 font-medium">Para garantizar la seguridad de todos, necesitamos verificar que eres una persona real antes de que vendas.</p>
+                        <button onclick="simulateKYC()" id="btn-kyc" class="bg-brand-dark hover:bg-black text-white font-bold py-4 px-10 rounded-xl shadow-lg transition text-lg w-full md:w-auto">Verificarme (Simulador)</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const misProductos = globalProducts.filter(p => p.sellerEmail === currentUserData.email);
+            const misVentas = globalOrders.filter(o => o.sellerEmail === currentUserData.email);
+            const totalVendido = misVentas.reduce((sum, item) => sum + item.price, 0);
+
+            appContent.innerHTML = `
+                <div class="fade-in max-w-6xl mx-auto">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                        <h2 class="text-3xl font-extrabold text-brand-dark">Panel de Ventas</h2>
+                        <button onclick="renderNewProductForm()" class="bg-brand-purple hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-xl shadow-[0_4px_15px_rgba(124,58,237,0.4)] transition flex items-center gap-2"><i class="fa-solid fa-plus"></i> Publicar Nuevo Artículo</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-2 bg-brand-blue"></div>
+                            <p class="text-xs text-gray-400 font-black uppercase tracking-wider">Ventas Totales</p>
+                            <p class="text-4xl font-black text-brand-dark mt-2">${formatMoney(totalVendido)}</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-2 bg-yellow-400"></div>
+                            <i class="fa-solid fa-circle-info absolute top-6 right-6 text-gray-300 hover:text-yellow-500 transition cursor-help" title="Dinero protegido en CrediNova hasta la entrega"></i>
+                            <p class="text-xs text-gray-400 font-black uppercase tracking-wider">En Custodia Segura</p>
+                            <p class="text-4xl font-black text-brand-dark mt-2">${formatMoney(totalVendido * 0.8)}</p>
+                        </div>
+                        <div class="bg-brand-dark p-8 rounded-3xl shadow-xl text-white relative overflow-hidden border border-gray-800">
+                            <div class="absolute top-0 left-0 w-full h-2 bg-brand-green"></div>
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-xs text-gray-400 font-black uppercase tracking-wider">Disponible a Retiro</p>
+                                    <p class="text-4xl font-black text-white mt-2">${formatMoney(totalVendido * 0.2)}</p>
+                                </div>
+                                <button class="bg-white/10 hover:bg-white/20 text-white p-3 rounded-xl transition" title="Retirar" onclick="showToast('Iniciando transferencia...', 'info')"><i class="fa-solid fa-building-columns"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-2xl font-bold mb-6 text-brand-dark">Tu Inventario Público</h3>
+                    <div class="bg-white rounded-[2rem] border border-gray-100 overflow-hidden shadow-sm">
+                        ${misProductos.length === 0 ? '<div class="p-16 text-center"><i class="fa-solid fa-shop text-5xl text-gray-200 mb-4"></i><p class="text-gray-500 font-medium">Tu tienda está vacía. ¡Sube tu primer producto hoy!</p></div>' : ''}
+                        <div class="divide-y divide-gray-100">
+                            ${misProductos.map(p => `
+                                <div class="p-6 flex justify-between items-center hover:bg-gray-50 transition">
+                                    <div class="flex items-center gap-6">
+                                        <img src="${p.image}" onerror="this.src='https://placehold.co/100'" class="w-16 h-16 rounded-xl object-contain bg-white border border-gray-100 p-1">
+                                        <div>
+                                            <span class="font-bold text-gray-800 text-lg block">${p.name}</span>
+                                            <span class="text-xs text-brand-purple font-black uppercase tracking-wider">${p.category} | ${p.location}</span>
+                                        </div>
+                                    </div>
+                                    <span class="font-black text-xl text-brand-dark">${formatMoney(p.price)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        window.simulateKYC = async function() {
+            const btn = document.getElementById('btn-kyc');
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Aprobando...`;
+            await setDoc(doc(db, "users", currentUserData.uid), { isVerified: true }, { merge: true });
+            currentUserData.isVerified = true;
+            showToast('¡Perfil verificado! Ahora eres Vendedor CrediNova.', 'success');
+            renderSellerDashboard();
+        };
+
+        window.previewImage = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('image-preview').src = e.target.result;
+                    document.getElementById('image-preview').classList.remove('hidden');
+                    document.getElementById('upload-icon-container').classList.add('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        };
+
+        window.compressImage = function(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 600; 
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6)); 
+                    };
+                    img.onerror = error => reject(error);
+                };
+                reader.onerror = error => reject(error);
+            });
+        };
+
+        window.renderNewProductForm = function() {
+            appContent.innerHTML = `
+                <div class="fade-in max-w-3xl mx-auto bg-white p-8 md:p-10 rounded-[2rem] shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-3xl font-bold text-brand-dark">Publicar Artículo</h2>
+                        <button onclick="renderSellerDashboard()" class="text-gray-400 hover:text-brand-dark"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-8 font-medium">Sube una foto real para generar confianza en tus compradores.</p>
+                    
+                    <form onsubmit="handlePublish(event)" class="space-y-6">
+                        
+                        <!-- Caja de Fotografía -->
+                        <div class="mb-8">
+                            <label class="text-sm font-black text-gray-700 block mb-3 uppercase tracking-wider">Fotografía del Producto</label>
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-brand-purple border-dashed rounded-2xl relative hover:bg-brand-purple/5 transition cursor-pointer overflow-hidden h-56 group" id="drop-zone" onclick="document.getElementById('f-image-file').click()">
+                                <div id="upload-icon-container" class="space-y-2 text-center flex flex-col items-center justify-center">
+                                    <div class="w-16 h-16 bg-brand-purple/10 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition"><i class="fa-solid fa-camera text-3xl text-brand-purple"></i></div>
+                                    <span class="text-sm font-bold text-brand-dark">Tocar para subir de la Galería</span>
+                                    <p class="text-xs text-gray-500">JPG, PNG permitidos</p>
+                                </div>
+                                <input id="f-image-file" type="file" class="sr-only" accept="image/*" onchange="previewImage(event)">
+                                <img id="image-preview" class="absolute inset-0 w-full h-full object-contain bg-gray-50 hidden" />
+                            </div>
+                            
+                            <div class="mt-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2"><i class="fa-solid fa-link"></i> Opción B: Pegar enlace de internet</p>
+                                <input type="url" id="f-image-url" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition" placeholder="https://ejemplo.com/foto.jpg">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-black text-gray-700 uppercase tracking-wider mb-2 block">Título</label>
+                            <input required id="f-name" class="w-full border border-gray-300 rounded-xl p-4 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition text-brand-dark font-medium" placeholder="Ej. Audífonos Bluetooth Inalámbricos">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-xs font-black text-gray-700 uppercase tracking-wider mb-2 block">Precio (COP)</label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-4 text-gray-500 font-bold">$</span>
+                                    <input type="number" required id="f-price" class="w-full border border-gray-300 rounded-xl p-4 pl-8 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition text-brand-dark font-bold" placeholder="150000">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-black text-gray-700 uppercase tracking-wider mb-2 block">Categoría</label>
+                                <select id="f-cat" class="w-full border border-gray-300 rounded-xl p-4 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition bg-white text-brand-dark font-medium cursor-pointer">
+                                    <option>Tecnología</option><option>Moda</option><option>Hogar</option><option>Deportes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div>
+                                <label class="text-xs font-black text-gray-700 uppercase tracking-wider mb-2 block">Ciudad de Origen</label>
+                                <select id="f-loc" class="w-full border border-gray-300 rounded-xl p-4 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition bg-white text-brand-dark font-medium cursor-pointer">
+                                    <option>Bogotá</option><option>Medellín</option><option>Cali</option><option>Barranquilla</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs font-black text-gray-700 uppercase tracking-wider mb-2 block">Descripción Detallada</label>
+                            <textarea required id="f-desc" class="w-full border border-gray-300 rounded-xl p-4 outline-none focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition text-brand-dark font-medium" rows="4" placeholder="Estado del producto, medidas, marca, detalles de envío..."></textarea>
+                        </div>
+                        <button type="submit" id="btn-publish" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-4 rounded-xl shadow-[0_4px_15px_rgba(124,58,237,0.4)] mt-4 transition text-lg flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Publicar y Vender a Cuotas
+                        </button>
+                    </form>
+                </div>
+            `;
+        };
+
+        window.handlePublish = async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-publish');
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Subiendo imagen y publicando...`; btn.disabled = true;
+
+            try {
+                const fileInput = document.getElementById('f-image-file');
+                const urlInput = document.getElementById('f-image-url').value;
+                let finalImage = "https://placehold.co/600x600/e2e8f0/0D1324?text=Sin+Foto"; 
+
+                if (fileInput.files && fileInput.files[0]) {
+                    finalImage = await compressImage(fileInput.files[0]);
+                } else if (urlInput) {
+                    finalImage = urlInput;
+                }
+
+                await addDoc(collection(db, "products"), {
+                    name: document.getElementById('f-name').value,
+                    price: parseInt(document.getElementById('f-price').value),
+                    category: document.getElementById('f-cat').value,
+                    location: document.getElementById('f-loc').value,
+                    image: finalImage,
+                    desc: document.getElementById('f-desc').value,
+                    sellerName: currentUserData.name, sellerEmail: currentUserData.email, sellerId: currentUserData.uid,
+                    createdAt: Date.now()
+                });
+                
+                showToast('¡Producto publicado exitosamente!');
+                renderSellerDashboard();
+            } catch (error) {
+                showToast("Error publicando: " + error.message, "error");
+                btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Publicar y Vender a Cuotas`; btn.disabled = false;
+            }
+        };
+
+        window.showModal = function(type) {
+            modalContainer.classList.remove('hidden');
+            setTimeout(() => modalContainer.classList.remove('opacity-0'), 10);
+            
+            if(type === 'login') {
+                modalContainer.innerHTML = `
+                    <div class="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative">
+                        <button onclick="closeModal()" class="absolute top-5 right-5 text-gray-400 hover:text-brand-dark bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
+                        <h2 class="text-3xl font-extrabold mb-2 text-brand-dark">Hola de nuevo</h2>
+                        <p class="text-sm text-gray-500 mb-6 font-medium">Ingresa para comprar o gestionar tu tienda.</p>
+                        <form onsubmit="handleLogin(event)" class="space-y-4">
+                            <div>
+                                <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Correo Electrónico</label>
+                                <input type="email" id="l-email" required class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition font-medium">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Contraseña</label>
+                                <input type="password" id="l-pass" required class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition font-medium">
+                            </div>
+                            <div class="flex justify-end pt-1">
+                                <button type="button" onclick="showModal('reset')" class="text-xs text-brand-blue font-bold hover:underline">¿Olvidaste tu contraseña?</button>
+                            </div>
+                            <button type="submit" id="btn-login" class="w-full bg-brand-dark hover:bg-black text-white font-bold py-3.5 rounded-xl transition shadow-lg mt-2">Ingresar a mi cuenta</button>
+                        </form>
+                        <p class="text-sm text-center text-gray-500 mt-6 font-medium">¿Aún no tienes cuenta? <button type="button" onclick="showModal('register')" class="text-brand-purple font-black hover:underline">Regístrate</button></p>
+                    </div>
+                `;
+            } else if (type === 'register') {
+                modalContainer.innerHTML = `
+                    <div class="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative">
+                        <button onclick="closeModal()" class="absolute top-5 right-5 text-gray-400 hover:text-brand-dark bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
+                        <h2 class="text-3xl font-extrabold mb-2 text-brand-purple">Crear Cuenta</h2>
+                        <p class="text-sm text-gray-500 mb-6 font-medium">Únete a la nueva forma de comprar y vender.</p>
+                        <form onsubmit="handleRegister(event)" class="space-y-4">
+                            <div>
+                                <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Nombre Completo</label>
+                                <input type="text" id="r-name" required class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition font-medium">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Correo Electrónico</label>
+                                <input type="email" id="r-email" required class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition font-medium">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Crear Contraseña (Min. 6 caracteres)</label>
+                                <input type="password" id="r-pass" required minlength="6" class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition font-medium">
+                            </div>
+                            <button type="submit" id="btn-register" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-3.5 rounded-xl transition shadow-[0_4px_15px_rgba(124,58,237,0.4)] mt-6">Completar Registro</button>
+                        </form>
+                        <p class="text-sm text-center text-gray-500 mt-6 font-medium">¿Ya eres miembro? <button type="button" onclick="showModal('login')" class="text-brand-blue font-black hover:underline">Inicia Sesión</button></p>
+                    </div>
+                `;
+            } else if (type === 'reset') {
+                modalContainer.innerHTML = `
+                    <div class="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative">
+                        <button onclick="closeModal()" class="absolute top-5 right-5 text-gray-400 hover:text-brand-dark bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
+                        <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4"><i class="fa-solid fa-key text-2xl text-brand-blue"></i></div>
+                        <h2 class="text-2xl font-extrabold mb-2 text-brand-dark">Recuperar Acceso</h2>
+                        <p class="text-sm text-gray-500 mb-6 font-medium">Ingresa tu correo y te enviaremos un enlace oficial seguro para que crees una nueva contraseña.</p>
+                        <form onsubmit="handleResetPassword(event)" class="space-y-4">
+                            <input type="email" id="reset-email" required placeholder="Tu correo registrado" class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition font-medium">
+                            <button type="submit" id="btn-reset" class="w-full bg-brand-blue hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg mt-2">Enviar enlace</button>
+                        </form>
+                        <p class="text-sm text-center text-gray-500 mt-6 font-medium">
+                            <button type="button" onclick="showModal('login')" class="text-brand-dark font-black hover:underline"><i class="fa-solid fa-arrow-left text-xs"></i> Volver a Iniciar Sesión</button>
+                        </p>
+                    </div>
+                `;
+            }
+        };
+
+        window.closeModal = function() {
+            modalContainer.classList.add('opacity-0');
+            setTimeout(() => { modalContainer.classList.add('hidden'); modalContainer.innerHTML=''; }, 300);
+        };
+
+        renderHome();
+    </script>
+</body>
+</html>
