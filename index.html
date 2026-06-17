@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script>
         tailwind.config = {
             theme: {
@@ -17,6 +18,7 @@
             }
         }
     </script>
+    
     <style>
         body { background-color: #f8fafc; overflow-x: hidden; }
         .glass-nav { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); }
@@ -25,18 +27,26 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Galería de Fotos del Producto */
         .gallery-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
         .gallery-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .gallery-thumb:hover, .gallery-thumb.active { border-color: #6366f1; }
         
-        /* Modales */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Estilos para el sistema de notificaciones propio */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { padding: 15px 25px; border-radius: 12px; color: white; font-weight: bold; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideIn 0.3s ease-out forwards; display: flex; align-items: center; gap: 10px;}
+        .toast.success { background-color: #10b981; }
+        .toast.error { background-color: #f43f5e; }
+        .toast.info { background-color: #6366f1; }
+        .toast.fade-out { animation: fadeOut 0.3s ease-in forwards; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
     </style>
 </head>
-<body class="text-slate-800 flex flex-col min-h-screen">
+<body class="text-slate-800 flex flex-col min-h-screen relative">
 
     <nav class="glass-nav sticky top-0 z-50 text-white shadow-xl">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
@@ -44,7 +54,7 @@
                 <i class="fa-solid fa-bolt text-accent"></i> CrediNova
             </div>
             
-            <div class="flex-1 max-w-2xl hidden md:flex items-center bg-white rounded-full p-1 overflow-hidden">
+            <div class="flex-1 max-w-2xl hidden md:flex items-center bg-white rounded-full p-1 overflow-hidden shadow-inner">
                 <select id="buscadorCiudad" class="bg-slate-100 text-slate-700 py-2 px-4 rounded-full outline-none font-semibold border-r border-slate-200 cursor-pointer">
                     <option value="Todas">📍 Toda Colombia</option>
                     <option value="Cartagena">📍 Cartagena</option>
@@ -53,65 +63,65 @@
                     <option value="Cali">📍 Cali</option>
                     <option value="Barranquilla">📍 Barranquilla</option>
                 </select>
-                <input type="text" id="buscadorTexto" placeholder="Ej. Moto Yamaha, iPhone 14..." class="w-full px-4 text-slate-800 outline-none">
+                <input type="text" id="buscadorTexto" placeholder="Ej. Yamaha, Samsung, Suéter..." class="w-full px-4 text-slate-800 outline-none">
                 <button class="bg-accent hover:bg-indigo-600 text-white px-6 py-2 rounded-full font-bold transition">Buscar</button>
             </div>
 
             <div id="userMenu" class="flex gap-4 items-center">
-                <!-- Se llena con JS dependiendo si hay sesión -->
-                <button class="text-sm font-semibold hover:text-accent" onclick="abrirModal('modalLogin')">Ingresar</button>
-                <button class="bg-accent hover:bg-indigo-600 px-5 py-2 rounded-xl font-bold transition shadow-lg shadow-indigo-500/30" onclick="abrirModal('modalLogin')">Regístrate</button>
+                <!-- Se inyectan botones por JS -->
             </div>
         </div>
     </nav>
 
     <div class="bg-white border-b border-slate-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex gap-6 overflow-x-auto whitespace-nowrap text-sm font-semibold text-slate-600">
-            <button class="hover:text-accent flex items-center gap-1"><i class="fa-solid fa-motorcycle text-lg"></i> Motos</button>
-            <button class="hover:text-accent flex items-center gap-1"><i class="fa-solid fa-car text-lg"></i> Carros</button>
-            <button class="hover:text-accent flex items-center gap-1"><i class="fa-solid fa-mobile-screen text-lg"></i> Celulares</button>
-            <button class="hover:text-accent flex items-center gap-1"><i class="fa-solid fa-gear text-lg"></i> Repuestos</button>
-            <button class="text-danger flex items-center gap-1"><i class="fa-solid fa-fire text-lg"></i> Ofertas del día</button>
+        <div class="max-w-7xl mx-auto px-4 py-3 flex gap-8 overflow-x-auto whitespace-nowrap text-sm font-bold text-slate-600 justify-center md:justify-start">
+            <button class="hover:text-accent flex flex-col items-center gap-1 transition-transform hover:scale-110" onclick="filtrarCategoria('Transportes')"><i class="fa-solid fa-car-side text-2xl text-slate-700"></i> Transportes</button>
+            <button class="hover:text-accent flex flex-col items-center gap-1 transition-transform hover:scale-110" onclick="filtrarCategoria('Tecnología')"><i class="fa-solid fa-laptop text-2xl text-slate-700"></i> Tecnología</button>
+            <button class="hover:text-accent flex flex-col items-center gap-1 transition-transform hover:scale-110" onclick="filtrarCategoria('Moda')"><i class="fa-solid fa-shirt text-2xl text-slate-700"></i> Moda</button>
+            <button class="hover:text-accent flex flex-col items-center gap-1 transition-transform hover:scale-110" onclick="filtrarCategoria('Hogar')"><i class="fa-solid fa-couch text-2xl text-slate-700"></i> Hogar</button>
+            <button class="text-danger flex flex-col items-center gap-1 transition-transform hover:scale-110" onclick="mostrarVista('inicio')"><i class="fa-solid fa-fire text-2xl text-danger"></i> Ver Todo</button>
         </div>
     </div>
 
     <main id="app-container" class="flex-grow max-w-7xl mx-auto w-full px-4 py-8">
+        
         <!-- VISTA INICIO (Catálogo) -->
         <div id="vista-inicio">
             <div class="flex justify-between items-end mb-6">
-                <h2 class="text-3xl font-extrabold text-slate-800">Recomendados para ti</h2>
+                <h2 class="text-3xl font-extrabold text-slate-800" id="titulo-catalogo">Últimas Publicaciones</h2>
             </div>
-            
             <div id="catalogo-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <div class="col-span-full text-center"><div class="loader"></div><p>Cargando productos de la nube...</p></div>
+                <div class="col-span-full text-center"><div class="loader"></div><p>Cargando catálogo...</p></div>
             </div>
         </div>
 
         <!-- VISTA PANEL VENDEDOR -->
         <div id="vista-dashboard" class="hidden">
-            <div class="flex justify-between items-center mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <div>
-                    <h2 class="text-3xl font-extrabold">Mi Panel de Vendedor</h2>
+                    <h2 class="text-3xl font-extrabold">Mi Panel de Negocios</h2>
                     <p class="text-slate-500" id="dash-email">cargando...</p>
                 </div>
-                <button onclick="abrirModal('modalPublicar')" class="bg-accent hover:bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg flex items-center gap-2">
+                <button onclick="intentarPublicar()" class="bg-accent hover:bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> Vender Artículo
                 </button>
             </div>
 
-            <!-- Dashboard Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-accent">
-                    <p class="text-slate-500 font-bold text-sm uppercase">Mis Publicaciones Activas</p>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-accent relative overflow-hidden">
+                    <i class="fa-solid fa-box-open absolute -right-4 -bottom-4 text-7xl text-slate-50 opacity-50"></i>
+                    <p class="text-slate-500 font-bold text-sm uppercase">Mis Publicaciones</p>
                     <p class="text-4xl font-black mt-2" id="dash-count">0</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-success">
-                    <p class="text-slate-500 font-bold text-sm uppercase">Calificación de Perfil</p>
-                    <p class="text-2xl font-black mt-2 text-warning">⭐⭐⭐⭐⭐ <span class="text-slate-400 text-lg">(Nuevo)</span></p>
+                    <p class="text-slate-500 font-bold text-sm uppercase">Estado Legal (KYC)</p>
+                    <p class="text-xl font-black mt-2 text-success flex items-center gap-2" id="estado-kyc-texto">
+                        <i class="fa-solid fa-clock text-warning"></i> Sin enviar
+                    </p>
                 </div>
             </div>
 
-            <h3 class="text-xl font-bold mb-4">Mis Productos en Venta</h3>
+            <h3 class="text-xl font-bold mb-4">Tus Productos Publicados</h3>
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <ul id="lista-mis-productos" class="divide-y divide-slate-100">
                     <li class="p-8 text-center text-slate-500">No tienes productos publicados.</li>
@@ -119,26 +129,38 @@
             </div>
         </div>
 
-        <!-- VISTA DETALLE PRODUCTO -->
-        <div id="vista-detalle" class="hidden">
-            <!-- Se llena con JS -->
+        <!-- VISTA PANEL ADMIN (Solo para oscarlewisguerrerogonzalez@gmail.com) -->
+        <div id="vista-admin" class="hidden">
+            <div class="mb-8">
+                <h2 class="text-3xl font-extrabold text-danger flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Panel de Control (Jefe)</h2>
+                <p class="text-slate-500">Aprobación de identidades y empresas.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 font-bold text-slate-700">Solicitudes KYC Pendientes</div>
+                <ul id="lista-kyc-pendientes" class="divide-y divide-slate-100 p-4">
+                    <li class="p-8 text-center text-slate-500">No hay nadie pendiente por aprobar.</li>
+                </ul>
+            </div>
         </div>
+
+        <!-- VISTA DETALLE PRODUCTO -->
+        <div id="vista-detalle" class="hidden"></div>
     </main>
 
-    <!-- Modal Login / Registro -->
+    <!-- Contenedor para Notificaciones (Toasts) -->
+    <div id="toast-container"></div>
+
+    <!-- Modal Login -->
     <div id="modalLogin" class="modal">
-        <div class="bg-white rounded-3xl w-full max-w-md p-8 relative shadow-2xl">
+        <div class="bg-white rounded-3xl w-full max-w-md p-8 relative shadow-2xl m-4">
             <button onclick="cerrarModal('modalLogin')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
             <h2 class="text-2xl font-bold mb-2">Ingresar a CrediNova</h2>
             <p class="text-slate-500 text-sm mb-6">Compra, vende y financia con seguridad.</p>
-            
-            <div id="alerta-auth" class="hidden bg-red-100 text-red-600 p-3 rounded-lg text-sm font-bold mb-4"></div>
-
             <form id="formAuth">
                 <input type="email" id="authEmail" required placeholder="Correo Electrónico" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4 outline-none focus:border-accent">
                 <input type="password" id="authPass" required placeholder="Contraseña (mínimo 6 caracteres)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 mb-2 outline-none focus:border-accent">
                 <button type="button" onclick="recuperarPassword()" class="text-accent text-sm font-bold mb-6 hover:underline">¿Olvidaste tu contraseña?</button>
-                
                 <div class="flex gap-4">
                     <button type="button" onclick="procesarLogin()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-xl transition">Entrar</button>
                     <button type="button" onclick="procesarRegistro()" class="flex-1 bg-accent hover:bg-indigo-600 text-white font-bold py-4 rounded-xl transition shadow-lg">Registrarme</button>
@@ -147,69 +169,129 @@
         </div>
     </div>
 
-    <!-- Modal Publicar Producto (Con Magia Base64 para fotos) -->
-    <div id="modalPublicar" class="modal overflow-y-auto py-10">
+    <!-- Modal KYC (Verificación Legal y Biometría simulada) -->
+    <div id="modalKYC" class="modal overflow-y-auto py-10 px-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl p-8 relative shadow-2xl m-auto border-t-8 border-indigo-500">
+            <button onclick="cerrarModal('modalKYC')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-id-card text-5xl text-indigo-500 mb-3"></i>
+                <h2 class="text-2xl font-black text-slate-800">Verificación de Identidad</h2>
+                <p class="text-slate-500 text-sm mt-2">Para proteger la comunidad, necesitamos confirmar tu identidad legal antes de vender.</p>
+            </div>
+            
+            <form id="formKYC" onsubmit="enviarKYC(event)" class="space-y-6">
+                <!-- Tipo de Vendedor -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label class="block text-sm font-bold text-slate-700 mb-3">¿Qué tipo de vendedor eres?</label>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <label class="flex-1 flex items-center gap-2 cursor-pointer bg-white p-3 rounded-lg border border-slate-200 hover:border-indigo-500 transition">
+                            <input type="radio" name="tipoVendedor" value="persona" checked onchange="toggleTipoVendedor()" class="w-4 h-4 text-indigo-600">
+                            <span class="font-bold text-slate-700">Persona Natural</span>
+                        </label>
+                        <label class="flex-1 flex items-center gap-2 cursor-pointer bg-white p-3 rounded-lg border border-slate-200 hover:border-indigo-500 transition">
+                            <input type="radio" name="tipoVendedor" value="empresa" onchange="toggleTipoVendedor()" class="w-4 h-4 text-indigo-600">
+                            <span class="font-bold text-slate-700">Empresa / Tienda</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="camposPersona" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">1. Foto de tu Cédula (Ambas caras)</label>
+                        <input type="file" accept="image/*" multiple required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm">
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <label class="block text-sm font-bold text-indigo-900 mb-2">2. Selfie de Seguridad</label>
+                        <p class="text-xs text-indigo-700 mb-3">Sube una selfie tuya sosteniendo un papel con este código:</p>
+                        <div class="text-center bg-white py-3 rounded-lg border-2 border-dashed border-indigo-300 mb-3">
+                            <span class="text-3xl font-black tracking-widest text-indigo-600" id="codigoSeguridad">000000</span>
+                        </div>
+                        <input type="file" accept="image/*" required class="w-full bg-white border border-indigo-200 rounded-xl p-2 text-sm">
+                    </div>
+                </div>
+
+                <div id="camposEmpresa" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">1. NIT de la Empresa</label>
+                        <input type="number" id="kycNit" placeholder="Ej. 900123456-7" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">2. Cámara de Comercio o RUT</label>
+                        <input type="file" accept="image/*" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm">
+                    </div>
+                </div>
+
+                <!-- Tratamiento de Datos -->
+                <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
+                    <p class="text-xs text-slate-500 text-justify mb-3 leading-relaxed">
+                        <strong>Autorización (Ley 1581 de 2012):</strong> Autorizo a CrediNova S.A.S. para recolectar y almacenar mis datos biométricos e información legal con el fin exclusivo de validar mi identidad y prevenir fraudes.
+                    </p>
+                    <label class="flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" required class="mt-1 w-4 h-4 text-indigo-600">
+                        <span class="text-sm font-bold text-slate-700">He leído y acepto el tratamiento de datos.</span>
+                    </label>
+                </div>
+
+                <button type="submit" id="btnKYC" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition shadow-lg text-lg flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Enviar a Revisión
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Publicar Producto -->
+    <div id="modalPublicar" class="modal overflow-y-auto py-10 px-4">
         <div class="bg-white rounded-3xl w-full max-w-2xl p-8 relative shadow-2xl m-auto">
             <button onclick="cerrarModal('modalPublicar')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            <h2 class="text-2xl font-bold mb-6"><i class="fa-solid fa-tag text-accent"></i> Vender un Artículo</h2>
+            <h2 class="text-2xl font-bold mb-6"><i class="fa-solid fa-tag text-accent"></i> Publicar Artículo</h2>
             
-            <div id="alerta-pub" class="hidden bg-blue-100 text-blue-700 p-3 rounded-lg text-sm font-bold mb-4"></div>
-
             <form id="formPublicar" onsubmit="subirProducto(event)">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Categoría Principal</label>
+                        <select id="pubCatPrincipal" onchange="actualizarSubcategorias()" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent">
+                            <option value="">Selecciona...</option>
+                            <option value="Transportes">🚗 Transportes</option>
+                            <option value="Tecnología">💻 Tecnología</option>
+                            <option value="Moda">👕 Moda</option>
+                            <option value="Hogar">🛋️ Hogar</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">¿Qué es exactamente?</label>
+                        <select id="pubSubCat" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent disabled:bg-slate-100 disabled:text-slate-400" disabled>
+                            <option value="">Primero elige una categoría</option>
+                        </select>
+                    </div>
                     <div class="col-span-full">
                         <label class="block text-sm font-bold text-slate-700 mb-1">Título del Anuncio</label>
-                        <input type="text" id="pubTitulo" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent" placeholder="Ej. Moto Pulsar NS 200 modelo 2024">
+                        <input type="text" id="pubTitulo" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent" placeholder="Ej. iPhone 13 Pro Max 128GB">
                     </div>
-                    
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Precio Normal ($)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Precio ($)</label>
                         <input type="number" id="pubPrecio" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent" placeholder="1500000">
                     </div>
-                    
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Precio en Oferta ($) <span class="text-xs text-slate-400 font-normal">Opcional</span></label>
-                        <input type="number" id="pubOferta" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent" placeholder="Dejar vacío si no hay oferta">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Ubicación</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Ubicación de Envío</label>
                         <select id="pubCiudad" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent">
-                            <option value="Cartagena">Cartagena</option>
-                            <option value="Bogota">Bogotá</option>
-                            <option value="Medellin">Medellín</option>
-                            <option value="Barranquilla">Barranquilla</option>
-                            <option value="Cali">Cali</option>
+                            <option value="Cartagena">Cartagena</option><option value="Bogota">Bogotá</option><option value="Medellin">Medellín</option><option value="Barranquilla">Barranquilla</option><option value="Cali">Cali</option>
                         </select>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Estado</label>
-                        <select id="pubEstado" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent">
-                            <option value="Nuevo">Nuevo</option>
-                            <option value="Usado - Como Nuevo">Usado - Como Nuevo</option>
-                            <option value="Usado - Buen Estado">Usado - Buen Estado</option>
-                        </select>
-                    </div>
-
                     <div class="col-span-full">
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Fotos (Selecciona varias desde tu galería)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Galería de Fotos (Máx 4)</label>
                         <div class="border-2 border-dashed border-accent bg-indigo-50 rounded-2xl p-6 text-center cursor-pointer hover:bg-indigo-100 transition relative">
-                            <i class="fa-solid fa-cloud-arrow-up text-4xl text-accent mb-2"></i>
+                            <i class="fa-solid fa-images text-4xl text-accent mb-2"></i>
                             <p class="font-bold text-slate-700">Toca para abrir tu galería</p>
-                            <p class="text-xs text-slate-500">Máximo 4 fotos. Se comprimirán automáticamente para no gastar tus datos.</p>
-                            <!-- El input real está invisible encima del cuadro -->
                             <input type="file" id="pubFotos" accept="image/*" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewFotos(this)">
                         </div>
                         <div id="preview-container" class="flex gap-2 mt-3 overflow-x-auto pb-2"></div>
                     </div>
-
                     <div class="col-span-full">
                         <label class="block text-sm font-bold text-slate-700 mb-1">Descripción</label>
-                        <textarea id="pubDesc" required rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent" placeholder="Kilometraje, detalles, motivo de venta..."></textarea>
+                        <textarea id="pubDesc" required rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent"></textarea>
                     </div>
                 </div>
-
                 <button type="submit" id="btnSubir" class="w-full bg-accent hover:bg-indigo-600 text-white font-bold py-4 rounded-xl transition shadow-lg text-lg flex justify-center items-center gap-2">
                     <i class="fa-solid fa-rocket"></i> Publicar Artículo
                 </button>
@@ -217,12 +299,27 @@
         </div>
     </div>
 
+    <!-- Modal de Confirmación Elegante -->
+    <div id="modalConfirm" class="modal px-4 z-[2000]">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+            <div class="w-16 h-16 rounded-full bg-red-100 text-red-500 mx-auto flex items-center justify-center text-3xl mb-4">
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2" id="confirmTitle">Confirmar Acción</h3>
+            <p class="text-slate-500 mb-6 text-sm" id="confirmText">¿Estás seguro de hacer esto?</p>
+            <div class="flex gap-3">
+                <button onclick="cerrarConfirmacion()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-200 transition">Cancelar</button>
+                <button id="btnConfirmarAccion" class="flex-1 bg-danger text-white font-bold py-3 rounded-xl hover:bg-rose-600 transition shadow-lg">Sí, Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // 🛑 PEGA AQUÍ TU API KEY EXACTA 🛑
+        // 🔥 TUS CLAVES Y DATOS REALES 🔥
         const firebaseConfig = {
             apiKey: "AIzaSyAETMBFi4sWhvt-lrTzInETggb5Pog9xt8", 
             authDomain: "credinova-8bdf3.firebaseapp.com",
@@ -236,12 +333,79 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let usuarioActual = null;
-        let arrayFotosBase64 = []; // Aquí guardaremos las fotos comprimidas
-        let productosGlobales = []; // Para buscar y mostrar detalles
+        const CORREO_DEL_JEFE = "oscarlewisguerrerogonzalez@gmail.com"; 
 
-        // --- Utilidades UI ---
-        window.abrirModal = (id) => document.getElementById(id).classList.add('active');
+        // Variables Globales
+        let usuarioActual = null;
+        let estadoKyc = "no_enviado"; 
+        let arrayFotosBase64 = []; 
+        let productosGlobales = [];
+        let callbackConfirmacion = null;
+
+        const mapaCategorias = {
+            "Transportes": ["Moto", "Carro", "Bicicleta", "Scooter", "Repuestos"],
+            "Tecnología": ["Celular", "Televisor", "Computador", "Consola", "Accesorios"],
+            "Moda": ["Suéter", "Pantaloneta", "Zapatos", "Reloj/Gafas"],
+            "Hogar": ["Mueble", "Electrodoméstico", "Decoración"]
+        };
+
+        
+        // Notificaciones Flotantes (Reemplaza a alert)
+        window.mostrarToast = (mensaje, tipo = 'info') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let icon = 'fa-circle-info';
+            if (tipo === 'success') icon = 'fa-circle-check';
+            if (tipo === 'error') icon = 'fa-circle-xmark';
+
+            toast.className = `toast ${tipo}`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-xl"></i> <span>${mensaje}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        };
+
+        // Modal de Confirmación (Reemplaza a confirm)
+        window.pedirConfirmacion = (titulo, texto, onConfirm) => {
+            document.getElementById('confirmTitle').innerText = titulo;
+            document.getElementById('confirmText').innerText = texto;
+            callbackConfirmacion = onConfirm;
+            document.getElementById('modalConfirm').classList.add('active');
+        };
+
+        window.cerrarConfirmacion = () => {
+            document.getElementById('modalConfirm').classList.remove('active');
+            callbackConfirmacion = null;
+        };
+
+        document.getElementById('btnConfirmarAccion').addEventListener('click', () => {
+            if(callbackConfirmacion) callbackConfirmacion();
+            cerrarConfirmacion();
+        });
+
+        // Controles de Vistas y Modales
+        window.actualizarSubcategorias = () => {
+            const principal = document.getElementById('pubCatPrincipal').value;
+            const sub = document.getElementById('pubSubCat');
+            sub.innerHTML = '';
+            if(principal && mapaCategorias[principal]) {
+                sub.disabled = false;
+                mapaCategorias[principal].forEach(item => { sub.innerHTML += `<option value="${item}">${item}</option>`; });
+            } else {
+                sub.disabled = true;
+                sub.innerHTML = '<option value="">Primero elige una categoría</option>';
+            }
+        };
+
+        window.abrirModal = (id) => {
+            document.getElementById(id).classList.add('active');
+            if(id === 'modalKYC') document.getElementById('codigoSeguridad').innerText = Math.floor(100000 + Math.random() * 900000);
+        };
         window.cerrarModal = (id) => document.getElementById(id).classList.remove('active');
         const formatoDinero = (num) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(num);
 
@@ -249,39 +413,66 @@
             document.getElementById('vista-inicio').classList.add('hidden');
             document.getElementById('vista-dashboard').classList.add('hidden');
             document.getElementById('vista-detalle').classList.add('hidden');
+            document.getElementById('vista-admin').classList.add('hidden');
             document.getElementById(`vista-${vista}`).classList.remove('hidden');
             if(vista === 'inicio') cargarProductosUI(productosGlobales);
+            if(vista === 'admin') cargarKycPendientes();
         };
 
-        // --- Sistema de Autenticación Avanzado ---
-        onAuthStateChanged(auth, (user) => {
+        window.filtrarCategoria = (categoria) => {
+            mostrarVista('inicio');
+            document.getElementById('titulo-catalogo').innerText = `Categoría: ${categoria}`;
+            const filtrados = productosGlobales.filter(p => p.categoriaPrincipal === categoria);
+            cargarProductosUI(filtrados);
+        };
+
+        onAuthStateChanged(auth, async (user) => {
             const menu = document.getElementById('userMenu');
             if (user) {
                 usuarioActual = user;
-                document.getElementById('dash-email').innerText = user.email;
-                
-                // --- NUEVO: Alerta visual de correos automáticos ---
-                if (!user.emailVerified) {
-                    if(!document.getElementById('banner-correo')) {
-                        const banner = document.createElement('div');
-                        banner.id = 'banner-correo';
-                        banner.className = 'bg-warning text-slate-800 text-center py-2 text-sm font-bold w-full shadow-md z-50';
-                        banner.innerHTML = `⚠️ Revisa tu correo electrónico para verificar tu cuenta. <button onclick="reenviarCorreo()" class="underline text-indigo-800 ml-2 hover:text-black">Reenviar correo automático</button>`;
-                        document.body.insertBefore(banner, document.body.firstChild);
-                    }
+                const esAdmin = user.email === CORREO_DEL_JEFE;
+
+                const docSnap = await getDoc(doc(db, "vendedores", user.uid));
+                if (docSnap.exists()) {
+                    estadoKyc = docSnap.data().estado;
                 } else {
-                    const banner = document.getElementById('banner-correo');
-                    if(banner) banner.remove();
+                    estadoKyc = "no_enviado";
                 }
 
-                menu.innerHTML = `
+                let botonesMenu = `
                     <button class="bg-slate-100 text-slate-800 hover:bg-slate-200 px-4 py-2 rounded-xl font-bold flex items-center gap-2" onclick="mostrarVista('dashboard')">
-                        <i class="fa-solid fa-store"></i> Mi Tienda
+                        <i class="fa-solid fa-store"></i> Mi Panel
                     </button>
-                    <button class="text-sm font-bold text-red-400 hover:text-red-500" onclick="cerrarSesion()">Salir</button>
                 `;
+                
+                if(esAdmin) {
+                    botonesMenu += `
+                        <button class="bg-danger text-white px-4 py-2 rounded-xl font-bold shadow-lg" onclick="mostrarVista('admin')">
+                            <i class="fa-solid fa-shield"></i> Aprobar Tiendas
+                        </button>
+                    `;
+                }
+                
+                botonesMenu += `<button class="text-sm font-bold text-red-400 hover:text-red-500 ml-2" onclick="cerrarSesion()">Salir</button>`;
+                menu.innerHTML = botonesMenu;
+
+                if(document.getElementById('dash-email')) {
+                    document.getElementById('dash-email').innerText = user.email;
+                    const kycTexto = document.getElementById('estado-kyc-texto');
+                    if(estadoKyc === 'aprobado') {
+                        kycTexto.innerHTML = `<i class="fa-solid fa-check-circle text-success"></i> Aprobado (Puedes vender)`;
+                        kycTexto.classList.replace('text-warning', 'text-success');
+                    } else if (estadoKyc === 'pendiente') {
+                        kycTexto.innerHTML = `<i class="fa-solid fa-clock text-warning"></i> En revisión por jefatura`;
+                        kycTexto.classList.replace('text-success', 'text-warning');
+                    } else {
+                        kycTexto.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> Faltan documentos`;
+                        kycTexto.classList.replace('text-success', 'text-danger');
+                    }
+                }
+
             } else {
-                usuarioActual = null;
+                usuarioActual = null; estadoKyc = "no_enviado";
                 menu.innerHTML = `
                     <button class="text-sm font-semibold hover:text-accent" onclick="abrirModal('modalLogin')">Ingresar</button>
                     <button class="bg-accent hover:bg-indigo-600 px-5 py-2 rounded-xl font-bold transition shadow-lg shadow-indigo-500/30" onclick="abrirModal('modalLogin')">Regístrate</button>
@@ -292,327 +483,290 @@
         window.procesarRegistro = async () => {
             const email = document.getElementById('authEmail').value;
             const pass = document.getElementById('authPass').value;
-            const alerta = document.getElementById('alerta-auth');
-            
-            if(pass.length < 6) { alerta.innerText = "La contraseña debe tener mínimo 6 letras/números"; alerta.classList.remove('hidden'); return; }
-
             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-                await sendEmailVerification(userCredential.user);
-                alerta.classList.replace('bg-red-100', 'bg-green-100');
-                alerta.classList.replace('text-red-600', 'text-green-700');
-                alerta.innerText = "¡Cuenta creada! Revisa tu correo (y el spam) para verificar tu email.";
-                alerta.classList.remove('hidden');
-                setTimeout(() => cerrarModal('modalLogin'), 5000);
-            } catch (error) {
-                alerta.innerText = "Error: " + error.message;
-                alerta.classList.remove('hidden');
+                await createUserWithEmailAndPassword(auth, email, pass);
+                cerrarModal('modalLogin'); 
+                mostrarToast("¡Cuenta creada exitosamente! Bienvenido.", "success");
+                mostrarVista('dashboard');
+            } catch (error) { 
+                mostrarToast(error.message, "error"); 
             }
         };
 
         window.procesarLogin = async () => {
-            const email = document.getElementById('authEmail').value;
-            const pass = document.getElementById('authPass').value;
-            const alerta = document.getElementById('alerta-auth');
             try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                cerrarModal('modalLogin');
+                await signInWithEmailAndPassword(auth, document.getElementById('authEmail').value, document.getElementById('authPass').value);
+                cerrarModal('modalLogin'); 
+                mostrarToast("Sesión iniciada correctamente", "success");
                 mostrarVista('dashboard');
-            } catch (error) {
-                alerta.innerText = "Correo o contraseña incorrectos.";
-                alerta.classList.remove('hidden');
+            } catch (error) { 
+                mostrarToast("Correo o contraseña incorrectos", "error"); 
             }
         };
 
-        window.recuperarPassword = async () => {
+        window.cerrarSesion = () => { signOut(auth); mostrarVista('inicio'); mostrarToast("Has cerrado sesión", "info"); };
+        
+        window.recuperarPassword = () => { 
             const email = document.getElementById('authEmail').value;
-            const alerta = document.getElementById('alerta-auth');
-            if(!email) { alerta.innerText = "Por favor, escribe tu correo arriba primero."; alerta.classList.remove('hidden'); return; }
+            if(!email) return mostrarToast("Por favor, ingresa tu correo primero", "error");
             
+            sendPasswordResetEmail(auth, email).then(() => {
+                mostrarToast('Se ha enviado un correo para cambiar tu contraseña.', 'success');
+            }).catch(e => mostrarToast("Error al enviar recuperación", "error")); 
+        }
+
+        window.intentarPublicar = () => {
+            if(!usuarioActual) return abrirModal('modalLogin');
+            
+            if(estadoKyc === 'aprobado') {
+                abrirModal('modalPublicar');
+            } else if (estadoKyc === 'pendiente') {
+                mostrarToast("⏳ Tus documentos están siendo revisados por el equipo.", "info");
+            } else {
+                abrirModal('modalKYC');
+            }
+        };
+
+        window.toggleTipoVendedor = () => {
+            const tipo = document.querySelector('input[name="tipoVendedor"]:checked').value;
+            const camposPersona = document.getElementById('camposPersona');
+            const camposEmpresa = document.getElementById('camposEmpresa');
+            
+            if(tipo === 'empresa') {
+                camposPersona.classList.add('hidden'); camposEmpresa.classList.remove('hidden');
+            } else {
+                camposEmpresa.classList.add('hidden'); camposPersona.classList.remove('hidden');
+            }
+        };
+
+        window.enviarKYC = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnKYC');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Subiendo documentos...`; btn.disabled = true;
+
             try {
-                await sendPasswordResetEmail(auth, email);
-                alerta.classList.replace('bg-red-100', 'bg-blue-100');
-                alerta.classList.replace('text-red-600', 'text-blue-700');
-                alerta.innerText = "Correo de recuperación enviado. Revisa tu bandeja de entrada.";
-                alerta.classList.remove('hidden');
-            } catch(e) {
-                alerta.innerText = "Error al enviar correo de recuperación.";
-                alerta.classList.remove('hidden');
+                await setDoc(doc(db, "vendedores", usuarioActual.uid), {
+                    email: usuarioActual.email,
+                    tipo: document.querySelector('input[name="tipoVendedor"]:checked').value,
+                    estado: 'pendiente',
+                    fechaSolicitud: Date.now()
+                });
+                
+                estadoKyc = 'pendiente';
+                mostrarToast("✅ Solicitud enviada a revisión.", "success");
+                cerrarModal('modalKYC');
+                mostrarVista('dashboard');
+                onAuthStateChanged(auth, (user) => { if(user) usuarioActual = user; }); 
+                
+            } catch (error) {
+                mostrarToast("Error enviando información.", "error");
+            } finally {
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Enviar a Revisión`; btn.disabled = false;
             }
         };
 
-        window.cerrarSesion = () => { signOut(auth); mostrarVista('inicio'); };
+        function cargarKycPendientes() {
+            const contenedor = document.getElementById('lista-kyc-pendientes');
+            contenedor.innerHTML = '<li class="p-8 text-center"><div class="loader"></div></li>';
+            
+            const q = query(collection(db, "vendedores"));
+            onSnapshot(q, (snapshot) => {
+                contenedor.innerHTML = '';
+                let hayPendientes = false;
 
-        window.reenviarCorreo = async () => {
-            if(usuarioActual) {
-                try {
-                    await sendEmailVerification(usuarioActual);
-                    alert("¡Nuevo correo automático enviado! Revisa tu bandeja de entrada o spam.");
-                } catch(e) {
-                    alert("Demasiados intentos. Espera unos minutos.");
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if(data.estado === 'pendiente') {
+                        hayPendientes = true;
+                        contenedor.innerHTML += `
+                            <li class="p-4 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100">
+                                <div>
+                                    <h4 class="font-bold text-slate-800">${data.email}</h4>
+                                    <p class="text-xs text-slate-500 uppercase">Tipo: ${data.tipo} | Solicitado: ${new Date(data.fechaSolicitud).toLocaleDateString()}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="aprobarVendedor('${doc.id}')" class="bg-success text-white px-4 py-2 rounded-lg font-bold hover:bg-emerald-600 transition shadow">Aprobar ✅</button>
+                                    <button onclick="rechazarVendedor('${doc.id}')" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold hover:bg-slate-300 transition">Rechazar ❌</button>
+                                </div>
+                            </li>
+                        `;
+                    }
+                });
+
+                if(!hayPendientes) {
+                    contenedor.innerHTML = '<li class="p-8 text-center font-bold text-slate-500">Todo limpio. No hay vendedores por aprobar.</li>';
                 }
-            }
+            });
+        }
+
+        window.aprobarVendedor = (uid) => {
+            pedirConfirmacion("Aprobar Vendedor", "¿Seguro que quieres aprobar esta tienda? Ya podrá publicar productos visibles para todos.", async () => {
+                await updateDoc(doc(db, "vendedores", uid), { estado: 'aprobado' });
+                mostrarToast("Vendedor aprobado con éxito.", "success");
+            });
         };
 
-        // --- TRUCO MAGICO: Compresión de Fotos a Base64 ---
+        window.rechazarVendedor = (uid) => {
+            pedirConfirmacion("Rechazar Solicitud", "¿Rechazar a este vendedor? Tendrá que volver a enviar todos los documentos.", async () => {
+                await deleteDoc(doc(db, "vendedores", uid));
+                mostrarToast("Solicitud rechazada y eliminada.", "info");
+            });
+        };
+
         window.previewFotos = async function(input) {
             const container = document.getElementById('preview-container');
-            container.innerHTML = ''; // Limpiar anteriores
-            arrayFotosBase64 = []; // Resetear arreglo
-            
-            const archivos = Array.from(input.files).slice(0, 4); // Máximo 4 fotos
+            container.innerHTML = ''; arrayFotosBase64 = []; 
+            const archivos = Array.from(input.files).slice(0, 4); 
             
             for (let file of archivos) {
-                // Comprimir y convertir
                 const base64Str = await comprimirYConvertirABase64(file);
                 arrayFotosBase64.push(base64Str);
-                
-                // Mostrar miniatura
-                const img = document.createElement('img');
-                img.src = base64Str;
-                img.className = "w-16 h-16 object-cover rounded-lg border border-slate-300";
+                const img = document.createElement('img'); img.src = base64Str; img.className = "w-16 h-16 object-cover rounded-lg border border-slate-300";
                 container.appendChild(img);
             }
         };
 
         function comprimirYConvertirABase64(file) {
             return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image(); img.src = e.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 600; // Reducimos tamaño para que no pese en Firestore
-                        const scaleSize = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
-                        
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
-                        // Calidad al 60% para guardar como JPG ligero
+                        const scale = 500 / img.width; canvas.width = 500; canvas.height = img.height * scale;
+                        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         resolve(canvas.toDataURL('image/jpeg', 0.6));
                     }
                 }
             });
         }
 
-        // --- Subir Producto a Firestore ---
         window.subirProducto = async (e) => {
             e.preventDefault();
-            if(!usuarioActual) return alert("Debes iniciar sesión");
-            if(arrayFotosBase64.length === 0) return alert("Sube al menos 1 foto");
-
-            const btn = document.getElementById('btnSubir');
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Publicando...`;
-            btn.disabled = true;
-
-            const precioNormal = parseFloat(document.getElementById('pubPrecio').value);
-            const precioOferta = parseFloat(document.getElementById('pubOferta').value);
-            const precioFinal = (precioOferta > 0 && precioOferta < precioNormal) ? precioOferta : precioNormal;
+            if(arrayFotosBase64.length === 0) return mostrarToast("Sube al menos 1 foto", "error");
+            const btn = document.getElementById('btnSubir'); btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Publicando...`; btn.disabled = true;
 
             try {
                 await addDoc(collection(db, "productos"), {
                     titulo: document.getElementById('pubTitulo').value,
-                    precioOriginal: precioNormal,
-                    precio: precioFinal,
+                    precio: parseFloat(document.getElementById('pubPrecio').value),
+                    categoriaPrincipal: document.getElementById('pubCatPrincipal').value,
+                    subCategoria: document.getElementById('pubSubCat').value,
                     ciudad: document.getElementById('pubCiudad').value,
-                    estado: document.getElementById('pubEstado').value,
                     descripcion: document.getElementById('pubDesc').value,
-                    fotosBase64: arrayFotosBase64, // Guardamos los textos Base64 directo en la base de datos
+                    fotosBase64: arrayFotosBase64,
                     vendedorId: usuarioActual.uid,
                     vendedorEmail: usuarioActual.email,
                     fecha: Date.now()
                 });
-
-                alert("¡Publicación exitosa!");
-                document.getElementById('formPublicar').reset();
-                document.getElementById('preview-container').innerHTML = '';
-                arrayFotosBase64 = [];
+                mostrarToast("¡Publicado exitosamente en el catálogo!", "success");
+                document.getElementById('formPublicar').reset(); document.getElementById('preview-container').innerHTML = ''; arrayFotosBase64 = [];
                 cerrarModal('modalPublicar');
-            } catch (error) {
-                alert("Error al publicar: " + error.message);
-            } finally {
-                btn.innerHTML = `<i class="fa-solid fa-rocket"></i> Publicar Artículo`;
-                btn.disabled = false;
-            }
+            } catch (error) { mostrarToast("Error de conexión.", "error"); } finally { btn.innerHTML = `<i class="fa-solid fa-rocket"></i> Publicar Artículo`; btn.disabled = false; }
         };
 
-        // --- Leer Productos en Tiempo Real ---
-        const q = query(collection(db, "productos"), orderBy("fecha", "desc"));
-        onSnapshot(q, (snapshot) => {
+        const qProd = query(collection(db, "productos"), orderBy("fecha", "desc"));
+        onSnapshot(qProd, (snapshot) => {
             productosGlobales = [];
             snapshot.forEach(doc => { productosGlobales.push({id: doc.id, ...doc.data()}); });
-            
-            cargarProductosUI(productosGlobales);
+            if(!document.getElementById('vista-inicio').classList.contains('hidden')) cargarProductosUI(productosGlobales);
             cargarMisProductos();
         });
 
         function cargarProductosUI(lista) {
             const contenedor = document.getElementById('catalogo-grid');
             contenedor.innerHTML = '';
-
-            if (lista.length === 0) {
-                contenedor.innerHTML = `<div class="col-span-full text-center py-10 bg-white rounded-2xl border border-dashed border-slate-300"><i class="fa-solid fa-box-open text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-bold">No hay productos aún.</p></div>`;
-                return;
-            }
+            if (lista.length === 0) return contenedor.innerHTML = `<div class="col-span-full text-center py-10 bg-white rounded-2xl border border-dashed border-slate-300"><p class="text-slate-500 font-bold">Catálogo vacío por el momento.</p></div>`;
 
             lista.forEach(prod => {
-                const fotoPortada = (prod.fotosBase64 && prod.fotosBase64.length > 0) ? prod.fotosBase64[0] : 'https://placehold.co/600?text=Sin+Foto';
-                const tieneOferta = prod.precioOriginal > prod.precio;
-                
+                const fotoPortada = prod.fotosBase64[0] || 'https://placehold.co/400x300/e2e8f0/0f172a?text=Sin+Imagen';
                 contenedor.innerHTML += `
                     <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover-scale cursor-pointer relative" onclick="verDetalle('${prod.id}')">
-                        ${tieneOferta ? `<div class="absolute top-6 left-6 bg-danger text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-md">🔥 OFERTA</div>` : ''}
-                        ${prod.fotosBase64.length > 1 ? `<div class="absolute top-6 right-6 bg-slate-900/70 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-lg z-10"><i class="fa-solid fa-images"></i> ${prod.fotosBase64.length}</div>` : ''}
-                        
-                        <img src="${fotoPortada}" class="w-full h-48 object-cover rounded-xl mb-4">
+                        ${prod.fotosBase64.length > 1 ? `<div class="absolute top-6 right-6 bg-slate-900/80 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-lg z-10"><i class="fa-solid fa-images"></i> ${prod.fotosBase64.length}</div>` : ''}
+                        <img src="${fotoPortada}" class="w-full h-48 object-cover rounded-xl mb-4 bg-slate-100">
                         <div class="flex justify-between items-start mb-1">
                             <p class="text-xs font-bold text-accent"><i class="fa-solid fa-location-dot"></i> ${prod.ciudad}</p>
-                            <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded font-semibold">${prod.estado}</span>
+                            <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded font-semibold">${prod.subCategoria}</span>
                         </div>
                         <h3 class="font-bold text-slate-800 leading-tight mb-2 line-clamp-2 h-10">${prod.titulo}</h3>
-                        
-                        ${tieneOferta ? `<p class="text-xs text-slate-400 line-through">${formatoDinero(prod.precioOriginal)}</p>` : ''}
                         <p class="text-2xl font-black text-slate-900">${formatoDinero(prod.precio)}</p>
                     </div>
                 `;
             });
         }
 
-        // --- Ver Detalle de Producto ---
+        function cargarMisProductos() {
+            if(!usuarioActual) return;
+            const mis = productosGlobales.filter(p => p.vendedorId === usuarioActual.uid);
+            if(document.getElementById('dash-count')) document.getElementById('dash-count').innerText = mis.length;
+            const lista = document.getElementById('lista-mis-productos');
+            if(lista) {
+                lista.innerHTML = '';
+                if(mis.length === 0) return lista.innerHTML = '<li class="p-8 text-center text-slate-500 font-bold">No has publicado nada aún.</li>';
+                mis.forEach(p => {
+                    const pic = p.fotosBase64[0] || 'https://placehold.co/100x100/e2e8f0/0f172a?text=Foto';
+                    lista.innerHTML += `
+                        <li class="p-4 flex justify-between hover:bg-slate-50 items-center">
+                            <div class="flex gap-4"><img src="${pic}" class="w-16 h-16 rounded-lg object-cover">
+                            <div><h4 class="font-bold">${p.titulo}</h4><p class="text-accent font-black">${formatoDinero(p.precio)}</p></div></div>
+                            <button onclick="eliminarProducto('${p.id}')" class="text-danger p-3 bg-red-50 hover:bg-red-100 rounded-xl transition"><i class="fa-solid fa-trash"></i></button>
+                        </li>`;
+                });
+            }
+        }
+
+        window.eliminarProducto = (id) => { 
+            pedirConfirmacion("Eliminar Publicación", "¿Estás seguro que deseas borrar este producto del catálogo? Nadie más lo podrá ver.", async () => {
+                await deleteDoc(doc(db, "productos", id)); 
+                mostrarToast("Producto eliminado del marketplace.", "success");
+            });
+        };
+
         window.verDetalle = (id) => {
             const prod = productosGlobales.find(p => p.id === id);
-            if(!prod) return;
-
             const vista = document.getElementById('vista-detalle');
-            const fotosHtml = prod.fotosBase64.map((f, index) => `<img src="${f}" class="gallery-thumb ${index===0?'active':''}" onclick="cambiarFotoPrincipal(this, '${f}')">`).join('');
-            const tieneOferta = prod.precioOriginal > prod.precio;
+            const fotosHtml = prod.fotosBase64.map((f, i) => `<img src="${f}" class="gallery-thumb ${i===0?'active':''}" onclick="cambiarFotoPrincipal(this, '${f}')">`).join('');
 
             vista.innerHTML = `
-                <button onclick="mostrarVista('inicio')" class="mb-6 font-bold text-slate-500 hover:text-accent flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Volver al catálogo</button>
-                
-                <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 flex flex-col md:flex-row gap-10">
+                <button onclick="mostrarVista('inicio')" class="mb-6 font-bold text-slate-500 hover:text-accent flex items-center gap-2 transition hover:-translate-x-1"><i class="fa-solid fa-arrow-left"></i> Volver al Catálogo</button>
+                <div class="bg-white rounded-3xl p-6 md:p-10 flex flex-col md:flex-row gap-10 shadow-sm border border-slate-100">
                     <div class="w-full md:w-1/2">
-                        <img id="foto-principal-detalle" src="${prod.fotosBase64[0]}" class="w-full h-80 md:h-[400px] object-cover rounded-2xl mb-4 border border-slate-100">
+                        <img id="foto-principal-detalle" src="${prod.fotosBase64[0]}" class="w-full h-[400px] object-cover rounded-2xl mb-4 bg-slate-50 border border-slate-100">
                         ${prod.fotosBase64.length > 1 ? `<div class="gallery-container">${fotosHtml}</div>` : ''}
                     </div>
-
-                    <div class="w-full md:w-1/2 flex flex-col">
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="bg-accent/10 text-accent font-bold px-3 py-1 rounded-full text-xs">🚗 ${prod.estado}</span>
-                            <span class="text-slate-500 text-sm"><i class="fa-solid fa-location-dot"></i> ${prod.ciudad}</span>
+                    <div class="w-full md:w-1/2">
+                        <div class="flex items-center gap-3 mb-3">
+                            <span class="bg-indigo-50 text-indigo-700 font-bold px-4 py-1.5 rounded-full text-xs uppercase border border-indigo-100">${prod.categoriaPrincipal}</span>
+                            <span class="text-xs text-slate-500"><i class="fa-solid fa-location-dot"></i> Envío desde ${prod.ciudad}</span>
                         </div>
+                        <h1 class="text-3xl font-black mt-3 mb-2 text-slate-800">${prod.titulo}</h1>
+                        <p class="text-4xl font-black mb-6 text-slate-900">${formatoDinero(prod.precio)}</p>
                         
-                        <h1 class="text-3xl md:text-4xl font-black text-slate-800 mb-4 leading-tight">${prod.titulo}</h1>
-                        
-                        <div class="mb-6">
-                            ${tieneOferta ? `<span class="text-sm text-slate-400 line-through">${formatoDinero(prod.precioOriginal)}</span> <span class="bg-danger text-white text-xs font-bold px-2 py-1 rounded ml-2">Rebajado</span>` : ''}
-                            <p class="text-5xl font-black text-slate-900">${formatoDinero(prod.precio)}</p>
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-6">
+                            <h4 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-circle-info text-accent"></i> Descripción del vendedor</h4>
+                            <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">${prod.descripcion}</p>
                         </div>
 
-                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 mb-6">
-                            <p class="text-sm text-slate-600 whitespace-pre-line">${prod.descripcion}</p>
-                        </div>
-
-                        <!-- Perfil Vendedor -->
-                        <div class="flex items-center gap-4 p-4 border border-slate-200 rounded-2xl mb-6">
-                            <div class="w-12 h-12 bg-indigo-100 text-accent rounded-full flex items-center justify-center font-black text-xl">
-                                ${prod.vendedorEmail.charAt(0).toUpperCase()}
-                            </div>
+                        <div class="bg-emerald-50 text-emerald-700 p-4 rounded-xl font-bold mb-6 flex items-center gap-3 border border-emerald-100">
+                            <i class="fa-solid fa-shield-check text-2xl"></i>
                             <div>
-                                <p class="font-bold text-slate-800 text-sm">Vendedor Verificado ✅</p>
-                                <p class="text-xs text-slate-500">${prod.vendedorEmail}</p>
+                                <p class="text-sm">Vendedor Verificado por CrediNova</p>
+                                <p class="text-[10px] uppercase tracking-wider font-semibold opacity-70">Identidad Confirmada</p>
                             </div>
                         </div>
-
-                        <!-- Botones Acción -->
-                        <div class="grid grid-cols-2 gap-4 mt-auto">
-                            <button onclick="alert('Abriendo WhatsApp del vendedor...')" class="bg-success hover:bg-emerald-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-500/30">
-                                <i class="fa-brands fa-whatsapp text-xl"></i> Contactar
-                            </button>
-                            <button onclick="compartirLink()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition border border-slate-300">
-                                <i class="fa-solid fa-share-nodes"></i> Compartir
-                            </button>
-                        </div>
-
-                        <!-- Simulador -->
-                        <div class="mt-6 border-t border-slate-200 pt-6">
-                            <h4 class="font-bold mb-3"><i class="fa-solid fa-calculator text-accent"></i> Simular Cuotas</h4>
-                            <div class="flex gap-2">
-                                <input type="number" id="sim-inicial" placeholder="Tu cuota inicial (Opcional)" class="w-2/3 bg-slate-50 border border-slate-200 rounded-lg p-3 outline-none" onkeyup="simularCredito(${prod.precio})">
-                                <select id="sim-meses" class="w-1/3 bg-slate-50 border border-slate-200 rounded-lg p-3 outline-none font-bold" onchange="simularCredito(${prod.precio})">
-                                    <option value="12">12 m</option>
-                                    <option value="24" selected>24 m</option>
-                                    <option value="36">36 m</option>
-                                </select>
-                            </div>
-                            <p class="mt-3 font-bold text-slate-700">Cuota mensual aprox: <span id="sim-resultado" class="text-accent text-xl">---</span></p>
-                        </div>
+                        <button onclick="window.open('https://wa.me/?text=Hola,%20me%20interesa%20tu%20producto:%20${prod.titulo}', '_blank')" class="w-full bg-success hover:bg-emerald-600 text-white font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition shadow-lg shadow-emerald-500/30">
+                            <i class="fa-brands fa-whatsapp text-2xl"></i> Contactar Vendedor (WhatsApp)
+                        </button>
                     </div>
                 </div>
             `;
             mostrarVista('detalle');
         };
-
-        window.cambiarFotoPrincipal = (imgElement, src) => {
-            document.getElementById('foto-principal-detalle').src = src;
-            document.querySelectorAll('.gallery-thumb').forEach(el => el.classList.remove('active'));
-            imgElement.classList.add('active');
-        };
-
-        window.simularCredito = (precioTotal) => {
-            const inicial = parseFloat(document.getElementById('sim-inicial').value) || 0;
-            const meses = parseInt(document.getElementById('sim-meses').value) || 24;
-            const saldo = precioTotal - inicial;
-            if(saldo <= 0) { document.getElementById('sim-resultado').innerText = "$0"; return; }
-            const cuota = (saldo / meses) + (saldo * 0.015); // 1.5% interés mensual
-            document.getElementById('sim-resultado').innerText = formatoDinero(Math.round(cuota));
-        };
-
-        window.compartirLink = () => {
-            if(navigator.share) { navigator.share({ title: 'Mira esto en CrediNova', url: window.location.href }); } 
-            else { alert("Enlace copiado al portapapeles"); }
-        };
-
-        // --- Panel de Vendedor: Mis Productos ---
-        function cargarMisProductos() {
-            if(!usuarioActual) return;
-            const misProductos = productosGlobales.filter(p => p.vendedorId === usuarioActual.uid);
-            document.getElementById('dash-count').innerText = misProductos.length;
-            
-            const lista = document.getElementById('lista-mis-productos');
-            lista.innerHTML = '';
-            
-            if(misProductos.length === 0) {
-                lista.innerHTML = '<li class="p-8 text-center text-slate-500 font-bold">Aún no has publicado nada. ¡Empieza a vender!</li>';
-                return;
-            }
-
-            misProductos.forEach(p => {
-                lista.innerHTML += `
-                    <li class="p-4 flex items-center justify-between hover:bg-slate-50">
-                        <div class="flex items-center gap-4">
-                            <img src="${p.fotosBase64[0]}" class="w-16 h-16 object-cover rounded-lg">
-                            <div>
-                                <h4 class="font-bold text-slate-800">${p.titulo}</h4>
-                                <p class="text-accent font-black">${formatoDinero(p.precio)}</p>
-                            </div>
-                        </div>
-                        <button onclick="eliminarProducto('${p.id}')" class="text-red-400 hover:text-red-600 bg-red-50 p-3 rounded-lg transition" title="Eliminar Producto">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </li>
-                `;
-            });
-        }
-
-        window.eliminarProducto = async (id) => {
-            if(confirm("¿Seguro que quieres eliminar este anuncio para siempre?")) {
-                await deleteDoc(doc(db, "productos", id));
-            }
+        
+        window.cambiarFotoPrincipal = (el, src) => { 
+            document.getElementById('foto-principal-detalle').src = src; 
+            document.querySelectorAll('.gallery-thumb').forEach(e => e.classList.remove('active')); 
+            el.classList.add('active'); 
         };
 
     </script>
