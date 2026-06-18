@@ -15,7 +15,7 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Poppins', 'sans-serif'] },
-                    colors: { brand: { dark: '#0D1324', purple: '#7C3AED', blue: '#2563EB', green: '#06D6A0' } }
+                    colors: { brand: { dark: '#0D1324', purple: '#7C3AED', blue: '#2563EB', green: '#06D6A0', bg: '#F8FAFC' } }
                 }
             }
         }
@@ -76,6 +76,7 @@
         </div>
     </header>
 
+    <!-- Contenedor Principal -->
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="app-content">
         <div class="text-center py-20"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-brand-purple"></i></div>
     </main>
@@ -86,7 +87,6 @@
 
     <script>
     try {
-        // --- BASE DE DATOS (Usamos LocalStorage para que nunca falle en GitHub) ---
         let db = {
             currentUser: JSON.parse(localStorage.getItem('cn_user')) || null,
             products: JSON.parse(localStorage.getItem('cn_products')) || [],
@@ -96,17 +96,16 @@
 
         const adminEmail = "oscarlewisguerrerogonzalez@gmail.com";
 
-        // Si no hay productos, creamos algunos de prueba
+        // Productos de muestra por defecto
         if (db.products.length === 0) {
             db.products = [
                 { id: 'p1', name: 'Yamaha R6 Deportiva', price: 45000000, category: 'Transportes', subcategory: 'Motos', city: 'Cartagena', image: 'https://placehold.co/600x400/ef4444/ffffff?text=Yamaha+R6', desc: 'Excelente estado, lista para traspaso.', sellerEmail: 'vendedor@test.com', status: 'approved' },
-                { id: 'p2', name: 'Suéter Hugo Boss Original', price: 250000, category: 'Moda', subcategory: 'Suéteres', city: 'Bogotá', image: 'https://placehold.co/400x600/1e293b/ffffff?text=Sueter+Boss', desc: 'Algodón premium, talla M.', sellerEmail: 'moda@test.com', status: 'approved' },
-                { id: 'p3', name: 'Smart TV Samsung 65"', price: 2100000, category: 'Tecnología', subcategory: 'Televisores', city: 'Medellín', image: 'https://placehold.co/600x400/3b82f6/ffffff?text=Smart+TV', desc: 'Resolución 4K, Smart Hub.', sellerEmail: 'tech@test.com', status: 'approved' }
+                { id: 'p2', name: 'Suéter Hugo Boss Original Negro', price: 250000, category: 'Moda', subcategory: 'Suéter', city: 'Bogotá', image: 'https://placehold.co/400x600/1e293b/ffffff?text=Sueter+Boss', desc: 'Algodón premium, talla M. Ajuste perfecto.', sellerEmail: 'moda@test.com', status: 'approved' },
+                { id: 'p3', name: 'Smart TV Samsung 65"', price: 2100000, category: 'Tecnología', subcategory: 'Televisor', city: 'Medellín', image: 'https://placehold.co/600x400/3b82f6/ffffff?text=Smart+TV', desc: 'Resolución 4K, Smart Hub.', sellerEmail: 'tech@test.com', status: 'approved' }
             ];
             saveDB();
         }
 
-        // --- FUNCIONES CORE ---
         function saveDB() {
             localStorage.setItem('cn_user', JSON.stringify(db.currentUser));
             localStorage.setItem('cn_products', JSON.stringify(db.products));
@@ -144,11 +143,10 @@
                     <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm ml-2">Salir</button>
                 `;
             } else {
-                nav.innerHTML = `<button onclick="showLogin()" class="bg-brand-purple hover:bg-purple-600 text-white text-sm font-bold px-6 py-2 rounded-full shadow-lg">Ingresar / Registro</button>`;
+                nav.innerHTML = `<button onclick="showLogin()" class="bg-brand-purple hover:bg-purple-600 text-white text-sm font-bold px-6 py-2 rounded-full shadow-lg">Ingresar</button>`;
             }
         }
 
-        // --- STREAMING_CHUNK: Enrutador de Vistas ---
         window.render = function(view, param = null) {
             const content = document.getElementById('app-content');
             content.innerHTML = '<div class="text-center py-20"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-brand-purple"></i></div>';
@@ -158,6 +156,7 @@
                     if (view === 'home') renderHome(content, param);
                     else if (view === 'product') renderProduct(content, param);
                     else if (view === 'dashboard') renderDashboard(content);
+                    else if (view === 'new_product') renderNewProductForm(content);
                     else if (view === 'admin') renderAdmin(content);
                     else if (view === 'chats') renderChats(content);
                     else if (view === 'chatRoom') renderChatRoom(content, param);
@@ -168,29 +167,30 @@
             }, 100);
         };
 
-        // --- STREAMING_CHUNK: Vista Principal (Catálogo y Banner) ---
         function renderHome(container, categoryFilter) {
-            let productsToShow = db.products.filter(p => p.status === 'approved');
+            // Mostrar los más nuevos primero
+            let productsToShow = [...db.products].filter(p => p.status === 'approved').reverse();
             if (categoryFilter) {
                 productsToShow = productsToShow.filter(p => p.category === categoryFilter);
             }
 
             let html = `<div class="fade-in space-y-10">`;
 
-            // BANNER ESPECTACULAR DE MOTOS (Siempre visible al inicio)
-            if (!categoryFilter || categoryFilter === 'Transportes') {
+            // BANNER PRINCIPAL GENÉRICO ORIGINAL
+            if (!categoryFilter) {
                 html += `
-                    <div class="bg-brand-dark rounded-3xl overflow-hidden shadow-2xl relative border-2 border-brand-dark">
-                        <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent z-10"></div>
-                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=2070&auto=format&fit=crop" class="w-full h-80 object-cover absolute inset-0 opacity-60">
+                    <div class="bg-brand-dark rounded-3xl overflow-hidden shadow-2xl relative border border-gray-800">
+                        <div class="absolute top-0 right-0 w-96 h-96 bg-brand-purple rounded-full mix-blend-screen filter blur-[100px] opacity-40"></div>
+                        <div class="absolute bottom-0 left-20 w-72 h-72 bg-brand-blue rounded-full mix-blend-screen filter blur-[80px] opacity-30"></div>
                         
                         <div class="relative z-20 p-10 md:p-16 flex flex-col justify-center h-full max-w-2xl text-white">
-                            <span class="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider w-max mb-4">Zona Motor</span>
-                            <h2 class="text-4xl md:text-5xl font-black mb-4 leading-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
-                                ¿Listo para estrenar o mejorar tu motocicleta?
+                            <h2 class="text-4xl md:text-5xl font-black mb-4 leading-tight">
+                                Descubre, compra y vende en <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-brand-green">CrediNova</span>
                             </h2>
-                            <p class="text-gray-300 text-lg mb-8">Encuentra las mejores marcas, repuestos y accesorios. Todo a cuotas y sin complicaciones.</p>
-                            <button onclick="render('home', 'Transportes')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-red-600/30 w-max transition transform hover:-translate-y-1">Ver Catálogo de Motos</button>
+                            <p class="text-gray-300 text-lg mb-8">El marketplace seguro donde encuentras todo lo que necesitas a cuotas y conectas con miles de compradores.</p>
+                            <div class="flex gap-4">
+                                <button onclick="window.scrollTo({top: 500, behavior: 'smooth'})" class="bg-brand-purple hover:bg-purple-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition">Explorar Catálogo</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -199,7 +199,7 @@
             // GRID DE PRODUCTOS
             html += `
                 <div>
-                    <h3 class="text-2xl font-bold mb-6 text-brand-dark">${categoryFilter ? `Resultados en: ${categoryFilter}` : 'Novedades y Ofertas'}</h3>
+                    <h3 class="text-2xl font-bold mb-6 text-brand-dark">${categoryFilter ? `Resultados en: ${categoryFilter}` : 'Publicaciones Recientes'}</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             `;
 
@@ -208,16 +208,16 @@
             } else {
                 productsToShow.forEach(p => {
                     html += `
-                        <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition duration-300 border border-gray-100 flex flex-col cursor-pointer overflow-hidden" onclick="render('product', '${p.id}')">
+                        <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition duration-300 border border-gray-100 flex flex-col cursor-pointer overflow-hidden group" onclick="render('product', '${p.id}')">
                             <div class="h-56 bg-gray-50 p-4 relative flex items-center justify-center">
                                 <span class="absolute top-3 left-3 bg-white/90 backdrop-blur text-brand-dark text-[10px] font-bold px-2 py-1 rounded shadow-sm">${p.subcategory || p.category}</span>
                                 <!-- object-contain hace que la imagen no se corte -->
-                                <img src="${p.image}" class="w-full h-full object-contain hover:scale-105 transition duration-500" alt="${p.name}">
+                                <img src="${p.image}" class="w-full h-full object-contain group-hover:scale-105 transition duration-500" alt="${p.name}">
                             </div>
                             <div class="p-5 flex-grow flex flex-col justify-between border-t border-gray-50">
                                 <div>
                                     <h4 class="font-bold text-gray-800 leading-tight mb-2 line-clamp-2">${p.name}</h4>
-                                    <p class="text-xs text-gray-500 mb-3"><i class="fa-solid fa-location-dot"></i> ${p.city}</p>
+                                    <p class="text-xs text-gray-500 mb-3"><i class="fa-solid fa-location-dot text-red-500"></i> ${p.city}</p>
                                 </div>
                                 <div>
                                     <p class="text-2xl font-black text-brand-dark">${formatMoney(p.price)}</p>
@@ -233,7 +233,6 @@
             container.innerHTML = html;
         }
 
-        // --- STREAMING_CHUNK: Vista de Producto (Con Simulador y Chat) ---
         function renderProduct(container, productId) {
             const p = db.products.find(x => x.id === productId);
             if (!p) return render('home');
@@ -241,9 +240,9 @@
             container.innerHTML = `
                 <div class="fade-in bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-10 relative">
                     
-                    <button onclick="render('home')" class="absolute top-6 left-6 text-gray-400 hover:text-brand-dark font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+                    <button onclick="render('home')" class="absolute top-6 left-6 text-gray-400 hover:text-brand-dark font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg transition"><i class="fa-solid fa-arrow-left"></i> Volver</button>
 
-                    <!-- Imagen sin recortar (object-contain) -->
+                    <!-- Imagen sin recortar (object-contain) fundamental para ropa/suéteres -->
                     <div class="w-full md:w-1/2 pt-10">
                         <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100 h-[500px] flex items-center justify-center">
                             <img src="${p.image}" class="max-w-full max-h-full object-contain drop-shadow-xl" alt="${p.name}">
@@ -290,18 +289,18 @@
                             </div>
                         </div>
 
-                        <!-- Botones de Acción (Chat Privado en lugar de WhatsApp) -->
+                        <!-- Botones de Acción (Chat Privado Interno) -->
                         <div class="flex gap-4">
                             <button onclick="iniciarChat('${p.id}', '${p.sellerEmail}', '${p.name}')" class="flex-grow bg-brand-dark hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg">
                                 <i class="fa-solid fa-comment-dots text-xl"></i> Chat Privado
                             </button>
-                            <button onclick="showToast('Enlace copiado al portapapeles')" class="w-16 bg-gray-100 hover:bg-gray-200 text-brand-dark font-bold rounded-xl flex items-center justify-center transition" title="Compartir">
+                            <button onclick="showToast('Enlace copiado al portapapeles para compartir')" class="w-16 bg-gray-100 hover:bg-gray-200 text-brand-dark font-bold rounded-xl flex items-center justify-center transition" title="Compartir">
                                 <i class="fa-solid fa-share-nodes text-xl"></i>
                             </button>
                         </div>
                         
                         <div class="mt-4 text-center">
-                            <p class="text-xs text-gray-400 font-bold"><i class="fa-solid fa-shield-check text-brand-green"></i> Vendedor Verificado por CrediNova (KYC)</p>
+                            <p class="text-xs text-gray-400 font-bold"><i class="fa-solid fa-shield-check text-brand-green"></i> Vendedor Verificado por CrediNova</p>
                         </div>
                     </div>
                 </div>
@@ -317,18 +316,13 @@
             document.getElementById('sim-resultado').innerText = formatMoney(cuota);
         }
 
-        // --- STREAMING_CHUNK: Sistema de Chat Privado ---
         window.iniciarChat = function(productId, sellerEmail, productName) {
             if (!db.currentUser) return showLogin();
             if (db.currentUser.email === sellerEmail) return showToast('Este es tu propio producto', 'error');
 
-            // Crear ID único para esta conversación
             const chatId = db.currentUser.email + '_' + sellerEmail + '_' + productId;
-            
-            // Buscar si ya existe
             let chat = db.chats.find(c => c.id === chatId);
             
-            // Si no existe, crearlo
             if (!chat) {
                 chat = {
                     id: chatId,
@@ -341,8 +335,6 @@
                 db.chats.push(chat);
                 saveDB();
             }
-            
-            // Abrir sala de chat
             render('chatRoom', chatId);
         };
 
@@ -373,7 +365,6 @@
                     `;
                 });
             }
-
             html += `</div></div>`;
             container.innerHTML = html;
         }
@@ -386,7 +377,6 @@
 
             let html = `
                 <div class="fade-in max-w-3xl mx-auto bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-[600px]">
-                    <!-- Header Chat -->
                     <div class="bg-brand-dark p-4 flex items-center gap-4 text-white">
                         <button onclick="render('chats')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i></button>
                         <div>
@@ -395,7 +385,6 @@
                         </div>
                     </div>
                     
-                    <!-- Área de Mensajes -->
                     <div class="flex-grow p-6 bg-gray-50 overflow-y-auto flex flex-col gap-4" id="chat-messages-area">
                         ${chat.messages.map(m => `
                             <div class="max-w-[80%] p-3 rounded-2xl text-sm ${m.sender === db.currentUser.email ? 'bg-brand-purple text-white self-end rounded-br-sm' : 'bg-white border border-gray-200 text-gray-800 self-start rounded-bl-sm'}">
@@ -404,16 +393,14 @@
                         `).join('')}
                     </div>
                     
-                    <!-- Input -->
                     <form onsubmit="enviarMensaje(event, '${chat.id}')" class="p-4 bg-white border-t border-gray-100 flex gap-2">
-                        <input type="text" id="chat-input" required placeholder="Escribe un mensaje..." class="flex-grow bg-gray-100 border-none rounded-full px-6 py-3 outline-none focus:ring-2 focus:ring-brand-purple">
+                        <input type="text" id="chat-input" required autocomplete="off" placeholder="Escribe un mensaje..." class="flex-grow bg-gray-100 border-none rounded-full px-6 py-3 outline-none focus:ring-2 focus:ring-brand-purple">
                         <button type="submit" class="w-12 h-12 bg-brand-purple text-white rounded-full flex items-center justify-center hover:bg-purple-600 transition shadow"><i class="fa-solid fa-paper-plane"></i></button>
                     </form>
                 </div>
             `;
             container.innerHTML = html;
             
-            // Bajar el scroll al final
             setTimeout(() => {
                 const area = document.getElementById('chat-messages-area');
                 if(area) area.scrollTop = area.scrollHeight;
@@ -430,19 +417,17 @@
             if (chat) {
                 chat.messages.push({ sender: db.currentUser.email, text: texto, time: Date.now() });
                 saveDB();
-                renderChatRoom(document.getElementById('app-content'), chatId); // Recargar
+                renderChatRoom(document.getElementById('app-content'), chatId);
             }
         }
 
-        // --- STREAMING_CHUNK: Panel del Vendedor y KYC ---
         function renderDashboard(container) {
             if (!db.currentUser) return showLogin();
 
-            // Verificar si el usuario ya mandó papeles KYC
             const kycStatus = db.kycRequests.find(k => k.email === db.currentUser.email);
             
+            // Si no tiene KYC aprobado ni en revisión, mostrar formulario de validación
             if (!kycStatus) {
-                // Mostrar formulario KYC
                 container.innerHTML = `
                     <div class="fade-in max-w-3xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
                         <div class="text-center mb-8">
@@ -468,8 +453,8 @@
                             
                             <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
                                 <h4 class="font-bold text-brand-blue mb-2"><i class="fa-solid fa-camera"></i> Subir Documentos</h4>
-                                <p class="text-xs text-gray-600 mb-4">Sube una foto de tu cédula y una selfie tuya sosteniendo un papel con el código: <strong class="text-black bg-white px-2 py-1 rounded">CRN-982</strong></p>
-                                <input type="file" required accept="image/*" class="text-sm w-full bg-white p-2 rounded border border-blue-200" title="Foto Cédula">
+                                <p class="text-xs text-gray-600 mb-4">Sube una foto de tu documento y una selfie tuya sosteniendo un papel con el código: <strong class="text-black bg-white px-2 py-1 rounded">CRN-982</strong></p>
+                                <input type="file" required accept="image/*" class="text-sm w-full bg-white p-2 rounded border border-blue-200" title="Foto Documento">
                                 <input type="file" required accept="image/*" class="text-sm w-full bg-white p-2 rounded border border-blue-200 mt-2" title="Selfie de Seguridad">
                             </div>
 
@@ -481,7 +466,7 @@
                             </div>
 
                             <button type="submit" id="btn-kyc" class="w-full bg-brand-dark hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg transition">
-                                Enviar a Revisión de Seguridad
+                                Enviar a Revisión
                             </button>
                         </form>
                     </div>
@@ -490,11 +475,11 @@
             }
 
             if (kycStatus.status === 'pending') {
-                container.innerHTML = `<div class="fade-in max-w-2xl mx-auto bg-white p-10 rounded-3xl text-center shadow border border-gray-100"><i class="fa-solid fa-user-clock text-6xl text-yellow-500 mb-6"></i><h2 class="text-2xl font-bold mb-2">Documentos en Revisión</h2><p class="text-gray-500">Nuestro equipo de seguridad (El Jefe) está revisando tu cédula y selfie. Esto suele tomar un par de horas. Te avisaremos cuando seas aprobado.</p></div>`;
+                container.innerHTML = `<div class="fade-in max-w-2xl mx-auto bg-white p-10 rounded-3xl text-center shadow border border-gray-100"><i class="fa-solid fa-user-clock text-6xl text-yellow-500 mb-6"></i><h2 class="text-2xl font-bold mb-2">Documentos en Revisión</h2><p class="text-gray-500">Nuestro equipo de seguridad está revisando tu información. Te avisaremos cuando seas aprobado.</p></div>`;
                 return;
             }
 
-            // SI YA ESTÁ APROBADO: Muestra su tienda
+            // Si tiene KYC aprobado, mostrar Dashboard normal
             const misProductos = db.products.filter(p => p.sellerEmail === db.currentUser.email);
             
             container.innerHTML = `
@@ -504,18 +489,18 @@
                             <h2 class="text-3xl font-black text-brand-dark">Mi Tienda Oficial</h2>
                             <p class="text-sm text-brand-green font-bold"><i class="fa-solid fa-check-circle"></i> Vendedor Verificado</p>
                         </div>
-                        <button onclick="alert('Función de publicar producto en construcción para prototipo')" class="bg-brand-purple text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-purple-600 transition"><i class="fa-solid fa-plus"></i> Publicar Artículo</button>
+                        <button onclick="render('new_product')" class="bg-brand-purple text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-purple-600 transition"><i class="fa-solid fa-plus"></i> Publicar Artículo</button>
                     </div>
 
                     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div class="p-6 bg-gray-50 border-b border-gray-100"><h3 class="font-bold text-gray-700">Artículos Activos (${misProductos.length})</h3></div>
+                        <div class="p-6 bg-gray-50 border-b border-gray-100"><h3 class="font-bold text-gray-700">Artículos Publicados (${misProductos.length})</h3></div>
                         ${misProductos.length === 0 ? '<div class="p-10 text-center text-gray-400">Aún no has publicado nada.</div>' : ''}
                         <ul class="divide-y divide-gray-100">
                             ${misProductos.map(p => `
                                 <li class="p-4 flex items-center justify-between hover:bg-gray-50">
                                     <div class="flex items-center gap-4">
                                         <img src="${p.image}" class="w-16 h-16 rounded-xl object-contain bg-white border border-gray-100">
-                                        <div><p class="font-bold text-sm">${p.name}</p><p class="text-xs text-gray-400">${p.category}</p></div>
+                                        <div><p class="font-bold text-sm">${p.name}</p><p class="text-xs text-gray-400">${p.category} > ${p.subcategory}</p></div>
                                     </div>
                                     <p class="font-black text-brand-dark">${formatMoney(p.price)}</p>
                                 </li>
@@ -529,7 +514,7 @@
         window.enviarKYC = function(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-kyc');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Simulando escaneo con IA...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Simulando escaneo de documentos...';
             btn.disabled = true;
 
             setTimeout(() => {
@@ -537,7 +522,7 @@
                     email: db.currentUser.email,
                     status: 'pending',
                     date: new Date().toLocaleDateString(),
-                    fakeIdImage: 'https://placehold.co/400x250/e2e8f0/64748b?text=Cedula+Simulada',
+                    fakeIdImage: 'https://placehold.co/400x250/e2e8f0/64748b?text=Cedula+Enviada',
                     fakeSelfie: 'https://placehold.co/300x300/e2e8f0/64748b?text=Selfie+CRN-982'
                 });
                 saveDB();
@@ -546,7 +531,97 @@
             }, 2000);
         }
 
-        // --- STREAMING_CHUNK: Panel del Jefe (Aprobar KYC) ---
+        window.cambiarSubcategoria = function() {
+            const cat = document.getElementById('np-cat').value;
+            const sub = document.getElementById('np-sub');
+            if (cat === 'Transportes') {
+                sub.innerHTML = `<option>Motos</option><option>Carros</option><option>Bicicletas</option><option>Repuestos</option>`;
+            } else if (cat === 'Moda') {
+                sub.innerHTML = `<option>Suéter</option><option>Pantaloneta</option><option>Zapatos</option><option>Accesorios</option>`;
+            } else if (cat === 'Tecnología') {
+                sub.innerHTML = `<option>Televisor</option><option>Celular</option><option>Computador</option><option>Accesorios</option>`;
+            } else {
+                sub.innerHTML = `<option>General</option>`;
+            }
+        }
+
+        function renderNewProductForm(container) {
+            container.innerHTML = `
+                <div class="fade-in max-w-3xl mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <button onclick="render('dashboard')" class="text-sm text-gray-500 hover:text-brand-dark mb-4"><i class="fa-solid fa-arrow-left"></i> Volver a mi tienda</button>
+                    <h2 class="text-2xl font-black text-brand-dark mb-6">Subir Nuevo Producto</h2>
+                    
+                    <form onsubmit="guardarProducto(event)" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Título del Producto</label>
+                            <input type="text" id="np-name" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none" placeholder="Ej. Yamaha R6 o Suéter Hugo Boss">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Categoría Principal</label>
+                                <select id="np-cat" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none" onchange="cambiarSubcategoria()" required>
+                                    <option value="Transportes">Transportes</option>
+                                    <option value="Moda">Moda</option>
+                                    <option value="Tecnología">Tecnología</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Subcategoría Específica</label>
+                                <select id="np-sub" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none" required>
+                                    <option>Motos</option><option>Carros</option><option>Bicicletas</option><option>Repuestos</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Precio Total (COP)</label>
+                                <input type="number" id="np-price" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none" placeholder="Sin puntos ni comas">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Ciudad del vendedor</label>
+                                <input type="text" id="np-city" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none" placeholder="Ej. Medellín, Bogotá...">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Enlace de la Imagen (URL)</label>
+                            <input type="url" id="np-img" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none" placeholder="https://ejemplo.com/mifoto.jpg">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Descripción</label>
+                            <textarea id="np-desc" rows="3" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none" placeholder="Detalles de estado, talla, kilometraje, etc."></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-4 rounded-xl shadow-lg transition text-lg mt-4">
+                            Publicar Producto al Catálogo
+                        </button>
+                    </form>
+                </div>
+            `;
+        }
+
+        window.guardarProducto = function(e) {
+            e.preventDefault();
+            db.products.push({
+                id: 'prod_' + Date.now(),
+                name: document.getElementById('np-name').value,
+                category: document.getElementById('np-cat').value,
+                subcategory: document.getElementById('np-sub').value,
+                price: parseInt(document.getElementById('np-price').value),
+                city: document.getElementById('np-city').value,
+                image: document.getElementById('np-img').value,
+                desc: document.getElementById('np-desc').value,
+                sellerEmail: db.currentUser.email,
+                status: 'approved' // En un sistema real pasaría a revisión
+            });
+            saveDB();
+            render('dashboard');
+            showToast('¡Producto publicado exitosamente!');
+        }
+
         function renderAdmin(container) {
             if (!db.currentUser || db.currentUser.email !== adminEmail) return render('home');
 
@@ -604,7 +679,6 @@
             showToast('Solicitud rechazada y eliminada', 'error');
         }
 
-        // --- LOGIN BÁSICO SIMULADO ---
         window.showLogin = function() {
             const modal = document.getElementById('modal-container');
             modal.innerHTML = `
@@ -615,7 +689,7 @@
                         <input type="email" id="log-email" required placeholder="Tu correo electrónico" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-brand-purple">
                         <button type="submit" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-3 rounded-xl shadow-lg transition">Continuar</button>
                     </form>
-                    <p class="text-xs text-center text-gray-400 mt-4">Usa cualquier correo para entrar. Usa <strong class="text-black">oscarlewisguerrerogonzalez@gmail.com</strong> para entrar como Jefe.</p>
+                    <p class="text-xs text-center text-gray-400 mt-4"><i class="fa-solid fa-lock"></i> Acceso seguro y protegido por CrediNova.</p>
                 </div>
             `;
             modal.classList.remove('hidden');
@@ -638,18 +712,17 @@
             showToast('Sesión cerrada');
         }
 
-        // INICIALIZAR APP
         updateNavbar();
         render('home');
 
     } catch (e) {
-        // ESCUDO ANTI-ERRORES
+        // Escudo Anti-Errores (Evita la pantalla blanca)
         document.getElementById('app-content').innerHTML = `
             <div class="max-w-2xl mx-auto bg-red-50 p-10 rounded-3xl text-center border-2 border-red-200 mt-20">
                 <i class="fa-solid fa-bomb text-6xl text-red-500 mb-6"></i>
                 <h2 class="text-2xl font-black text-red-700 mb-2">¡Ups! Algo se rompió en el código</h2>
                 <p class="text-red-600 mb-4">Error técnico: <strong>${e.message}</strong></p>
-                <p class="text-sm text-gray-600">Por favor, copia el código nuevamente asegurándote de no borrar ningún símbolo (como las comillas o corchetes).</p>
+                <p class="text-sm text-gray-600">Por favor, asegúrate de haber copiado todo el bloque de código completo sin saltarte ninguna línea.</p>
             </div>
         `;
     }
