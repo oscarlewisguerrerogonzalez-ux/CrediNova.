@@ -24,7 +24,6 @@
         body { background-color: #F8FAFC; color: #0D1324; overflow-x: hidden; }
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* Scrollbar invisible para mejor diseño */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -65,7 +64,7 @@
             </div>
         </div>
 
-        <!-- Categorías -->
+        <!-- Categorías Inferiores -->
         <div class="border-t border-gray-800 bg-[#0B101E]">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex gap-6 overflow-x-auto text-sm font-medium text-gray-300 whitespace-nowrap">
                 <button class="hover:text-white" onclick="render('home', 'Transportes')"><i class="fa-solid fa-motorcycle mr-1"></i> Transportes</button>
@@ -81,13 +80,14 @@
         <div class="text-center py-20"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-brand-purple"></i></div>
     </main>
 
-    <!-- Modales y Alertas -->
+    <!-- Modales y Notificaciones -->
     <div id="modal-container" class="fixed inset-0 bg-brand-dark/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4"></div>
     <div id="toast-container" class="fixed bottom-4 right-4 z-[110] flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
     try {
         let db = {
+            users: JSON.parse(localStorage.getItem('cn_users')) || [],
             currentUser: JSON.parse(localStorage.getItem('cn_user')) || null,
             products: JSON.parse(localStorage.getItem('cn_products')) || [],
             kycRequests: JSON.parse(localStorage.getItem('cn_kyc')) || [],
@@ -95,6 +95,12 @@
         };
 
         const adminEmail = "oscarlewisguerrerogonzalez@gmail.com";
+
+        // Crear usuario administrador por defecto si no existe
+        if (!db.users.find(u => u.email === adminEmail)) {
+            db.users.push({ nombre: "Administrador", email: adminEmail, pass: "123456" });
+            saveDB();
+        }
 
         // Productos de muestra por defecto
         if (db.products.length === 0) {
@@ -107,6 +113,7 @@
         }
 
         function saveDB() {
+            localStorage.setItem('cn_users', JSON.stringify(db.users));
             localStorage.setItem('cn_user', JSON.stringify(db.currentUser));
             localStorage.setItem('cn_products', JSON.stringify(db.products));
             localStorage.setItem('cn_kyc', JSON.stringify(db.kycRequests));
@@ -124,7 +131,7 @@
             toast.innerHTML = message;
             container.appendChild(toast);
             setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 10);
-            setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
+            setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300); }, 4000); // 4 segundos
         }
 
         function updateNavbar() {
@@ -134,16 +141,19 @@
                 let unreadChats = db.chats.filter(c => (c.buyerEmail === db.currentUser.email || c.sellerEmail === db.currentUser.email)).length;
                 
                 nav.innerHTML = `
-                    <button onclick="render('chats')" class="relative text-gray-300 hover:text-white transition" title="Mis Mensajes">
+                    <button onclick="render('chats')" class="relative text-gray-300 hover:text-white transition bg-gray-800 p-2 rounded-full" title="Mis Mensajes">
                         <i class="fa-solid fa-comment-dots text-xl"></i>
-                        ${unreadChats > 0 ? `<span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 rounded-full">${unreadChats}</span>` : ''}
+                        ${unreadChats > 0 ? `<span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 rounded-full">${unreadChats}</span>` : ''}
                     </button>
                     ${isAdmin ? `<button onclick="render('admin')" class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"><i class="fa-solid fa-shield-halved"></i> Aprobar Tiendas</button>` : ''}
                     <button onclick="render('dashboard')" class="bg-white text-brand-dark hover:bg-gray-100 text-sm font-bold px-4 py-2 rounded-lg shadow flex items-center gap-2"><i class="fa-solid fa-store"></i> Mi Tienda</button>
-                    <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm ml-2">Salir</button>
+                    <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm ml-2 font-medium border border-gray-600 px-3 py-1 rounded">Salir</button>
                 `;
             } else {
-                nav.innerHTML = `<button onclick="showLogin()" class="bg-brand-purple hover:bg-purple-600 text-white text-sm font-bold px-6 py-2 rounded-full shadow-lg">Ingresar</button>`;
+                nav.innerHTML = `
+                    <button onclick="showLogin()" class="text-gray-300 hover:text-white text-sm font-bold mr-2">Ingresar</button>
+                    <button onclick="showRegister()" class="bg-brand-purple hover:bg-purple-600 text-white text-sm font-bold px-6 py-2 rounded-full shadow-lg">Crear Cuenta</button>
+                `;
             }
         }
 
@@ -168,7 +178,6 @@
         };
 
         function renderHome(container, categoryFilter) {
-            // Mostrar los más nuevos primero
             let productsToShow = [...db.products].filter(p => p.status === 'approved').reverse();
             if (categoryFilter) {
                 productsToShow = productsToShow.filter(p => p.category === categoryFilter);
@@ -176,7 +185,7 @@
 
             let html = `<div class="fade-in space-y-10">`;
 
-            // BANNER PRINCIPAL GENÉRICO ORIGINAL
+            // BANNER PRINCIPAL ELEGANTE
             if (!categoryFilter) {
                 html += `
                     <div class="bg-brand-dark rounded-3xl overflow-hidden shadow-2xl relative border border-gray-800">
@@ -211,7 +220,7 @@
                         <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition duration-300 border border-gray-100 flex flex-col cursor-pointer overflow-hidden group" onclick="render('product', '${p.id}')">
                             <div class="h-56 bg-gray-50 p-4 relative flex items-center justify-center">
                                 <span class="absolute top-3 left-3 bg-white/90 backdrop-blur text-brand-dark text-[10px] font-bold px-2 py-1 rounded shadow-sm">${p.subcategory || p.category}</span>
-                                <!-- object-contain hace que la imagen no se corte -->
+                                <!-- object-contain asegura que no se recorte ropa ni motos -->
                                 <img src="${p.image}" class="w-full h-full object-contain group-hover:scale-105 transition duration-500" alt="${p.name}">
                             </div>
                             <div class="p-5 flex-grow flex flex-col justify-between border-t border-gray-50">
@@ -339,14 +348,14 @@
         };
 
         function renderChats(container) {
-            if (!db.currentUser) return render('home');
+            if (!db.currentUser) return showLogin();
             
             const misChats = db.chats.filter(c => c.buyerEmail === db.currentUser.email || c.sellerEmail === db.currentUser.email);
 
             let html = `<div class="fade-in max-w-4xl mx-auto"><h2 class="text-3xl font-bold mb-8 text-brand-dark"><i class="fa-solid fa-comments text-brand-purple"></i> Mis Mensajes</h2><div class="space-y-4">`;
 
             if (misChats.length === 0) {
-                html += `<div class="bg-white p-10 rounded-2xl text-center shadow-sm border border-gray-100 text-gray-500">No tienes conversaciones activas.</div>`;
+                html += `<div class="bg-white p-10 rounded-2xl text-center shadow-sm border border-gray-100 text-gray-500">No tienes conversaciones activas. Haz clic en "Chat Privado" en un producto para iniciar una.</div>`;
             } else {
                 misChats.forEach(chat => {
                     const otroUsuario = chat.buyerEmail === db.currentUser.email ? chat.sellerEmail : chat.buyerEmail;
@@ -386,6 +395,7 @@
                     </div>
                     
                     <div class="flex-grow p-6 bg-gray-50 overflow-y-auto flex flex-col gap-4" id="chat-messages-area">
+                        ${chat.messages.length === 0 ? '<div class="text-center text-gray-400 text-sm mt-10">Envía el primer mensaje para empezar a negociar.</div>' : ''}
                         ${chat.messages.map(m => `
                             <div class="max-w-[80%] p-3 rounded-2xl text-sm ${m.sender === db.currentUser.email ? 'bg-brand-purple text-white self-end rounded-br-sm' : 'bg-white border border-gray-200 text-gray-800 self-start rounded-bl-sm'}">
                                 ${m.text}
@@ -404,6 +414,7 @@
             setTimeout(() => {
                 const area = document.getElementById('chat-messages-area');
                 if(area) area.scrollTop = area.scrollHeight;
+                document.getElementById('chat-input').focus();
             }, 50);
         }
 
@@ -426,7 +437,7 @@
 
             const kycStatus = db.kycRequests.find(k => k.email === db.currentUser.email);
             
-            // Si no tiene KYC aprobado ni en revisión, mostrar formulario de validación
+            // Si no tiene KYC aprobado ni en revisión, mostrar formulario legal
             if (!kycStatus) {
                 container.innerHTML = `
                     <div class="fade-in max-w-3xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
@@ -466,7 +477,7 @@
                             </div>
 
                             <button type="submit" id="btn-kyc" class="w-full bg-brand-dark hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg transition">
-                                Enviar a Revisión
+                                Enviar a Revisión Biométrica
                             </button>
                         </form>
                     </div>
@@ -475,11 +486,11 @@
             }
 
             if (kycStatus.status === 'pending') {
-                container.innerHTML = `<div class="fade-in max-w-2xl mx-auto bg-white p-10 rounded-3xl text-center shadow border border-gray-100"><i class="fa-solid fa-user-clock text-6xl text-yellow-500 mb-6"></i><h2 class="text-2xl font-bold mb-2">Documentos en Revisión</h2><p class="text-gray-500">Nuestro equipo de seguridad está revisando tu información. Te avisaremos cuando seas aprobado.</p></div>`;
+                container.innerHTML = `<div class="fade-in max-w-2xl mx-auto bg-white p-10 rounded-3xl text-center shadow border border-gray-100"><i class="fa-solid fa-user-clock text-6xl text-yellow-500 mb-6"></i><h2 class="text-2xl font-bold mb-2">Documentos en Revisión</h2><p class="text-gray-500">Nuestro equipo de seguridad está verificando tu identidad. Te avisaremos pronto.</p></div>`;
                 return;
             }
 
-            // Si tiene KYC aprobado, mostrar Dashboard normal
+            // Si tiene KYC aprobado, mostrar Dashboard de Ventas
             const misProductos = db.products.filter(p => p.sellerEmail === db.currentUser.email);
             
             container.innerHTML = `
@@ -494,7 +505,7 @@
 
                     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="p-6 bg-gray-50 border-b border-gray-100"><h3 class="font-bold text-gray-700">Artículos Publicados (${misProductos.length})</h3></div>
-                        ${misProductos.length === 0 ? '<div class="p-10 text-center text-gray-400">Aún no has publicado nada.</div>' : ''}
+                        ${misProductos.length === 0 ? '<div class="p-10 text-center text-gray-400">Aún no has publicado nada. Haz clic en "Publicar Artículo".</div>' : ''}
                         <ul class="divide-y divide-gray-100">
                             ${misProductos.map(p => `
                                 <li class="p-4 flex items-center justify-between hover:bg-gray-50">
@@ -514,7 +525,7 @@
         window.enviarKYC = function(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-kyc');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Simulando escaneo de documentos...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Simulando escaneo de seguridad...';
             btn.disabled = true;
 
             setTimeout(() => {
@@ -522,13 +533,13 @@
                     email: db.currentUser.email,
                     status: 'pending',
                     date: new Date().toLocaleDateString(),
-                    fakeIdImage: 'https://placehold.co/400x250/e2e8f0/64748b?text=Cedula+Enviada',
-                    fakeSelfie: 'https://placehold.co/300x300/e2e8f0/64748b?text=Selfie+CRN-982'
+                    fakeIdImage: 'https://placehold.co/600x400/e2e8f0/64748b?text=Cedula+Enviada',
+                    fakeSelfie: 'https://placehold.co/400x400/e2e8f0/64748b?text=Selfie+CRN-982'
                 });
                 saveDB();
                 render('dashboard');
                 showToast('Documentos enviados con éxito al Administrador');
-            }, 2000);
+            }, 2500);
         }
 
         window.cambiarSubcategoria = function() {
@@ -554,7 +565,7 @@
                     <form onsubmit="guardarProducto(event)" class="space-y-5">
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Título del Producto</label>
-                            <input type="text" id="np-name" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none" placeholder="Ej. Yamaha R6 o Suéter Hugo Boss">
+                            <input type="text" id="np-name" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-brand-purple" placeholder="Ej. Yamaha R6 o Suéter Hugo Boss">
                         </div>
                         
                         <div class="grid grid-cols-2 gap-4">
@@ -592,7 +603,7 @@
 
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Descripción</label>
-                            <textarea id="np-desc" rows="3" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none" placeholder="Detalles de estado, talla, kilometraje, etc."></textarea>
+                            <textarea id="np-desc" rows="3" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none" placeholder="Detalles de estado, talla, etc."></textarea>
                         </div>
 
                         <button type="submit" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-4 rounded-xl shadow-lg transition text-lg mt-4">
@@ -615,7 +626,7 @@
                 image: document.getElementById('np-img').value,
                 desc: document.getElementById('np-desc').value,
                 sellerEmail: db.currentUser.email,
-                status: 'approved' // En un sistema real pasaría a revisión
+                status: 'approved'
             });
             saveDB();
             render('dashboard');
@@ -679,30 +690,123 @@
             showToast('Solicitud rechazada y eliminada', 'error');
         }
 
+        
         window.showLogin = function() {
             const modal = document.getElementById('modal-container');
             modal.innerHTML = `
-                <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative">
+                <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative fade-in">
                     <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
-                    <h2 class="text-2xl font-black text-brand-dark mb-6">Ingresar</h2>
+                    <h2 class="text-2xl font-black text-brand-dark mb-2">Ingresar</h2>
+                    <p class="text-sm text-gray-500 mb-6">Bienvenido de nuevo a CrediNova.</p>
                     <form onsubmit="hacerLogin(event)" class="space-y-4">
                         <input type="email" id="log-email" required placeholder="Tu correo electrónico" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-brand-purple">
-                        <button type="submit" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-3 rounded-xl shadow-lg transition">Continuar</button>
+                        <input type="password" id="log-pass" required placeholder="Tu contraseña" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-brand-purple">
+                        <button type="submit" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-3 rounded-xl shadow-lg transition">Entrar</button>
                     </form>
-                    <p class="text-xs text-center text-gray-400 mt-4"><i class="fa-solid fa-lock"></i> Acceso seguro y protegido por CrediNova.</p>
+                    <p class="text-xs text-center text-gray-500 mt-6">¿No tienes cuenta? <button onclick="showRegister()" class="text-brand-blue font-bold hover:underline">Regístrate aquí</button></p>
                 </div>
             `;
             modal.classList.remove('hidden');
         }
 
+        window.showRegister = function() {
+            const modal = document.getElementById('modal-container');
+            modal.innerHTML = `
+                <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative fade-in">
+                    <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    <h2 class="text-2xl font-black text-brand-dark mb-2">Crear Cuenta</h2>
+                    <p class="text-sm text-gray-500 mb-6">Únete para comprar y vender a cuotas.</p>
+                    <form onsubmit="iniciarRegistro(event)" class="space-y-4">
+                        <input type="text" id="reg-name" required placeholder="Nombre completo" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-brand-purple">
+                        <input type="email" id="reg-email" required placeholder="Correo electrónico" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-brand-purple">
+                        <input type="password" id="reg-pass" required placeholder="Crea una contraseña" minlength="6" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-brand-purple">
+                        <button type="submit" id="btn-reg" class="w-full bg-brand-dark hover:bg-black text-white font-bold py-3 rounded-xl shadow-lg transition">Registrarme</button>
+                    </form>
+                    <p class="text-xs text-center text-gray-500 mt-6">¿Ya tienes cuenta? <button onclick="showLogin()" class="text-brand-purple font-bold hover:underline">Ingresa aquí</button></p>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        window.iniciarRegistro = function(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const pass = document.getElementById('reg-pass').value;
+
+            // Verificar si el correo ya existe
+            if(db.users.find(u => u.email === email)) {
+                return showToast('Este correo ya está registrado.', 'error');
+            }
+
+            // Generar código de 4 dígitos
+            const codigoVerificacion = Math.floor(1000 + Math.random() * 9000);
+            
+            // Animación de carga
+            document.getElementById('btn-reg').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando correo...';
+            
+            setTimeout(() => {
+                showVerification(nombre, email, pass, codigoVerificacion);
+                
+                // Simulación de notificación de Gmail en el celular
+                setTimeout(() => {
+                    showToast(`📧 GMAIL: Tu código CrediNova es: <b class="text-xl ml-1 tracking-widest">${codigoVerificacion}</b>`, 'info');
+                }, 1500);
+            }, 1000);
+        }
+
+        window.showVerification = function(nombre, email, pass, codigo) {
+            const modal = document.getElementById('modal-container');
+            modal.innerHTML = `
+                <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative fade-in text-center">
+                    <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    <div class="w-16 h-16 bg-brand-bg rounded-full flex items-center justify-center mx-auto mb-4 text-brand-purple text-2xl">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                    </div>
+                    <h2 class="text-2xl font-black text-brand-dark mb-2">Revisa tu correo</h2>
+                    <p class="text-sm text-gray-500 mb-6">Hemos enviado un código a <b>${email}</b>. Ingrésalo para confirmar tu cuenta.</p>
+                    
+                    <form onsubmit="verificarCodigo(event, '${nombre}', '${email}', '${pass}', ${codigo})" class="space-y-4">
+                        <input type="number" id="ver-code" required placeholder="XXXX" max="9999" class="w-full text-center text-3xl tracking-[10px] font-black bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none focus:border-brand-purple">
+                        <button type="submit" class="w-full bg-brand-green hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg transition text-lg">Confirmar Cuenta</button>
+                    </form>
+                </div>
+            `;
+        }
+
+        window.verificarCodigo = function(e, nombre, email, pass, codigoCorrecto) {
+            e.preventDefault();
+            const codigoIngresado = parseInt(document.getElementById('ver-code').value);
+            
+            if(codigoIngresado === codigoCorrecto) {
+                const newUser = { nombre, email, pass };
+                db.users.push(newUser);
+                db.currentUser = newUser;
+                saveDB();
+                document.getElementById('modal-container').classList.add('hidden');
+                showToast('¡Cuenta verificada y creada exitosamente!', 'success');
+                render('home');
+            } else {
+                showToast('El código es incorrecto. Intenta de nuevo.', 'error');
+            }
+        }
+
         window.hacerLogin = function(e) {
             e.preventDefault();
             const email = document.getElementById('log-email').value.trim();
-            db.currentUser = { email: email };
-            saveDB();
-            document.getElementById('modal-container').classList.add('hidden');
-            showToast('¡Sesión iniciada correctamente!');
-            render('home');
+            const pass = document.getElementById('log-pass').value;
+            
+            const user = db.users.find(u => u.email === email && u.pass === pass);
+            
+            if (user) {
+                db.currentUser = user;
+                saveDB();
+                document.getElementById('modal-container').classList.add('hidden');
+                showToast('¡Sesión iniciada correctamente!');
+                render('home');
+            } else {
+                showToast('Correo o contraseña incorrectos.', 'error');
+            }
         }
 
         window.logout = function() {
@@ -712,11 +816,12 @@
             showToast('Sesión cerrada');
         }
 
+        // Inicializar la aplicación
         updateNavbar();
         render('home');
 
     } catch (e) {
-        // Escudo Anti-Errores (Evita la pantalla blanca)
+        // Escudo Anti-Errores (Evita la Pantalla Blanca)
         document.getElementById('app-content').innerHTML = `
             <div class="max-w-2xl mx-auto bg-red-50 p-10 rounded-3xl text-center border-2 border-red-200 mt-20">
                 <i class="fa-solid fa-bomb text-6xl text-red-500 mb-6"></i>
