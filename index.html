@@ -1,894 +1,280 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CrediNova | El Marketplace de Colombia</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
-                    colors: { primary: '#0f172a', accent: '#6366f1', success: '#10b981', danger: '#f43f5e', warning: '#f59e0b' }
-                }
-            }
+<!-- ... existing code ... -->
+        <div class="border-t border-gray-800 bg-[#0B101E]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex space-x-6 overflow-x-auto no-scrollbar text-sm font-medium text-gray-300">
+                <button class="hover:text-white flex items-center gap-2" onclick="renderCatalog()"><i class="fa-solid fa-bars"></i> Categorías</button>
+                <button class="hover:text-white" onclick="renderHome()">Inicio</button>
+                <button class="hover:text-white text-brand-green" onclick="renderCatalog()"><i class="fa-solid fa-tag"></i> Ofertas</button>
+                <button class="hover:text-white" onclick="renderMyPurchases()">Mis Compras</button>
+                <button class="hover:text-white text-yellow-400 font-bold" onclick="renderChats()"><i class="fa-solid fa-comments"></i> Chat</button>
+                <button class="hover:text-white bg-white/10 px-3 py-1 rounded" onclick="renderSellerDashboard()">Mi Panel</button>
+<!-- ... existing code ... -->
+        // --- 1. BASE DE DATOS LOCAL (Simulación de Backend) ---
+        let db = {
+            products: JSON.parse(localStorage.getItem('cn_products')) || [],
+            users: JSON.parse(localStorage.getItem('cn_users')) || [],
+            orders: JSON.parse(localStorage.getItem('cn_orders')) || [],
+            cart: JSON.parse(localStorage.getItem('cn_cart')) || [],
+            kyc: JSON.parse(localStorage.getItem('cn_kyc')) || [],
+            chats: JSON.parse(localStorage.getItem('cn_chats')) || [], 
+            currentUser: JSON.parse(localStorage.getItem('cn_current_user')) || null
+        };
+
+        const appContent = document.getElementById('app-content');
+        const modalContainer = document.getElementById('modal-container');
+
+        // Función para guardar cambios
+        function saveDB() {
+            localStorage.setItem('cn_products', JSON.stringify(db.products));
+            localStorage.setItem('cn_users', JSON.stringify(db.users));
+            localStorage.setItem('cn_orders', JSON.stringify(db.orders));
+            localStorage.setItem('cn_cart', JSON.stringify(db.cart));
+            localStorage.setItem('cn_kyc', JSON.stringify(db.kyc));
+            localStorage.setItem('cn_chats', JSON.stringify(db.chats)); 
+            localStorage.setItem('cn_current_user', JSON.stringify(db.currentUser));
+            updateUI();
         }
-    </script>
-    
-    <style>
-        body { background-color: #f8fafc; overflow-x: hidden; }
-        .glass-nav { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); }
-        .hover-scale { transition: transform 0.2s ease-in-out; }
-        .hover-scale:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4); }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .gallery-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
-        .gallery-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
-        .gallery-thumb:hover, .gallery-thumb.active { border-color: #6366f1; }
-        
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; }
-        .modal.active { display: flex; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+<!-- ... existing code ... -->
+        window.renderProductDetail = function(id) {
+            const p = db.products.find(x => x.id === id);
+            if(!p) return;
 
-        /* Estilos para el sistema de notificaciones propio */
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { padding: 15px 25px; border-radius: 12px; color: white; font-weight: bold; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideIn 0.3s ease-out forwards; display: flex; align-items: center; gap: 10px;}
-        .toast.success { background-color: #10b981; }
-        .toast.error { background-color: #f43f5e; }
-        .toast.info { background-color: #6366f1; }
-        .toast.fade-out { animation: fadeOut 0.3s ease-in forwards; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-    </style>
-</head>
-<body class="text-slate-800 flex flex-col min-h-screen relative">
-
-    <nav class="glass-nav sticky top-0 z-50 text-white shadow-xl">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
-            <div class="text-2xl font-extrabold cursor-pointer flex items-center gap-2" onclick="mostrarVista('inicio')">
-                <i class="fa-solid fa-bolt text-accent"></i> CrediNova
-            </div>
-            
-            <div class="flex-1 max-w-2xl hidden md:flex items-center bg-white rounded-full p-1 overflow-hidden shadow-inner">
-                <select id="buscadorCiudad" class="bg-slate-100 text-slate-700 py-2 px-4 rounded-full outline-none font-semibold border-r border-slate-200 cursor-pointer">
-                    <option value="Todas">📍 Toda Colombia</option>
-                    <option value="Cartagena">📍 Cartagena</option>
-                    <option value="Bogota">📍 Bogotá</option>
-                    <option value="Medellin">📍 Medellín</option>
-                    <option value="Cali">📍 Cali</option>
-                    <option value="Barranquilla">📍 Barranquilla</option>
-                </select>
-                <input type="text" id="buscadorTexto" placeholder="Ej. Yamaha, Samsung, Suéter..." class="w-full px-4 text-slate-800 outline-none">
-                <button class="bg-accent hover:bg-indigo-600 text-white px-6 py-2 rounded-full font-bold transition">Buscar</button>
-            </div>
-
-            <div id="userMenu" class="flex gap-4 items-center">
-                <!-- Se inyectan botones por JS -->
-            </div>
-        </div>
-    </nav>
-
-    <div class="bg-white border-b border-slate-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex gap-8 overflow-x-auto whitespace-nowrap text-sm font-bold text-slate-600 justify-center md:justify-start">
-            <button class="hover:text-accent flex flex-col items-center gap-1 transition-transform hover:scale-110" onclick="filtrarCategoria('Transportes')"><i class="fa-solid fa-car-side text-2xl text-slate-700"></i> Transportes</button>
-            <button class="hover:text-accent flex flex-col items-center gap-1 transition-transform hover:scale-110" onclick="filtrarCategoria('Tecnología')"><i class="fa-solid fa-laptop text-2xl text-slate-700"></i> Tecnología</button>
-            <button class="hover:text-accent flex flex-col items-center gap-1 transition-transform hover:scale-110" onclick="filtrarCategoria('Moda')"><i class="fa-solid fa-shirt text-2xl text-slate-700"></i> Moda</button>
-            <button class="hover:text-accent flex flex-col items-center gap-1 transition-transform hover:scale-110" onclick="filtrarCategoria('Hogar')"><i class="fa-solid fa-couch text-2xl text-slate-700"></i> Hogar</button>
-            <button class="text-danger flex flex-col items-center gap-1 transition-transform hover:scale-110" onclick="mostrarVista('inicio')"><i class="fa-solid fa-fire text-2xl text-danger"></i> Ver Todo</button>
-        </div>
-    </div>
-
-    <main id="app-container" class="flex-grow max-w-7xl mx-auto w-full px-4 py-8">
-        
-        <!-- VISTA INICIO (Catálogo) -->
-        <div id="vista-inicio">
-            
-            <!-- NUEVO HERO BANNER -->
-            <div class="bg-gradient-to-r from-primary to-accent rounded-3xl p-8 md:p-12 text-white shadow-2xl mb-10 relative overflow-hidden flex flex-col md:flex-row items-center justify-between">
-                <div class="relative z-10 md:w-2/3">
-                    <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block backdrop-filter backdrop-blur-md border border-white/30">Tu nuevo Marketplace</span>
-                    <h1 class="text-4xl md:text-5xl font-black mb-4 leading-tight">Compra hoy,<br>paga a cuotas.</h1>
-                    <p class="text-slate-200 mb-6 text-lg">Motos, tecnología y más, directo de vendedores verificados. Sin complicaciones.</p>
-                    <button onclick="document.getElementById('buscadorTexto').focus()" class="bg-white text-primary font-bold px-8 py-3 rounded-full hover:scale-105 transition shadow-lg flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Buscar Ofertas</button>
-                </div>
-                <i class="fa-solid fa-motorcycle text-[180px] text-white/10 absolute right-5 -bottom-10 transform -rotate-12 z-0"></i>
-            </div>
-
-            <div class="flex justify-between items-end mb-6">
-                <h2 class="text-3xl font-extrabold text-slate-800" id="titulo-catalogo">Últimas Publicaciones</h2>
-            </div>
-            <div id="catalogo-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <div class="col-span-full text-center"><div class="loader"></div><p>Cargando catálogo...</p></div>
-            </div>
-        </div>
-
-        <!-- VISTA PANEL VENDEDOR -->
-        <div id="vista-dashboard" class="hidden">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <div>
-                    <h2 class="text-3xl font-extrabold">Mi Panel de Negocios</h2>
-                    <p class="text-slate-500" id="dash-email">cargando...</p>
-                </div>
-                <button onclick="intentarPublicar()" class="bg-accent hover:bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Vender Artículo
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-accent relative overflow-hidden">
-                    <i class="fa-solid fa-box-open absolute -right-4 -bottom-4 text-7xl text-slate-50 opacity-50"></i>
-                    <p class="text-slate-500 font-bold text-sm uppercase">Mis Publicaciones</p>
-                    <p class="text-4xl font-black mt-2" id="dash-count">0</p>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-success">
-                    <p class="text-slate-500 font-bold text-sm uppercase">Estado Legal (KYC)</p>
-                    <p class="text-xl font-black mt-2 text-success flex items-center gap-2" id="estado-kyc-texto">
-                        <i class="fa-solid fa-clock text-warning"></i> Sin enviar
-                    </p>
-                </div>
-            </div>
-
-            <h3 class="text-xl font-bold mb-4">Tus Productos Publicados</h3>
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <ul id="lista-mis-productos" class="divide-y divide-slate-100">
-                    <li class="p-8 text-center text-slate-500">No tienes productos publicados.</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- VISTA PANEL ADMIN (Solo para oscarlewisguerrerogonzalez@gmail.com) -->
-        <div id="vista-admin" class="hidden">
-            <div class="mb-8">
-                <h2 class="text-3xl font-extrabold text-danger flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Panel de Control (Jefe)</h2>
-                <p class="text-slate-500">Aprobación de identidades y empresas.</p>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 font-bold text-slate-700">Solicitudes KYC Pendientes</div>
-                <ul id="lista-kyc-pendientes" class="divide-y divide-slate-100 p-4">
-                    <li class="p-8 text-center text-slate-500">No hay nadie pendiente por aprobar.</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- VISTA DETALLE PRODUCTO -->
-        <div id="vista-detalle" class="hidden"></div>
-    </main>
-
-    <!-- Contenedor para Notificaciones (Toasts) -->
-    <div id="toast-container"></div>
-
-    <!-- Modal Login -->
-    <div id="modalLogin" class="modal">
-        <div class="bg-white rounded-3xl w-full max-w-md p-8 relative shadow-2xl m-4">
-            <button onclick="cerrarModal('modalLogin')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            <h2 class="text-2xl font-bold mb-2">Ingresar a CrediNova</h2>
-            <p class="text-slate-500 text-sm mb-6">Compra, vende y financia con seguridad.</p>
-            <form id="formAuth">
-                <input type="email" id="authEmail" required placeholder="Correo Electrónico" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4 outline-none focus:border-accent">
-                <input type="password" id="authPass" required placeholder="Contraseña (mínimo 6 caracteres)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 mb-2 outline-none focus:border-accent">
-                <button type="button" onclick="recuperarPassword()" class="text-accent text-sm font-bold mb-6 hover:underline">¿Olvidaste tu contraseña?</button>
-                <div class="flex gap-4">
-                    <button type="button" onclick="procesarLogin()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-xl transition">Entrar</button>
-                    <button type="button" onclick="procesarRegistro()" class="flex-1 bg-accent hover:bg-indigo-600 text-white font-bold py-4 rounded-xl transition shadow-lg">Registrarme</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal KYC (Verificación Legal y Biometría simulada) -->
-    <div id="modalKYC" class="modal overflow-y-auto py-10 px-4">
-        <div class="bg-white rounded-3xl w-full max-w-2xl p-8 relative shadow-2xl m-auto border-t-8 border-indigo-500">
-            <button onclick="cerrarModal('modalKYC')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            
-            <div class="text-center mb-6">
-                <i class="fa-solid fa-id-card text-5xl text-indigo-500 mb-3"></i>
-                <h2 class="text-2xl font-black text-slate-800">Verificación de Identidad</h2>
-                <p class="text-slate-500 text-sm mt-2">Para proteger la comunidad, necesitamos confirmar tu identidad legal antes de vender.</p>
-            </div>
-            
-            <form id="formKYC" onsubmit="enviarKYC(event)" class="space-y-6">
-                <!-- Tipo de Vendedor -->
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <label class="block text-sm font-bold text-slate-700 mb-3">¿Qué tipo de vendedor eres?</label>
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <label class="flex-1 flex items-center gap-2 cursor-pointer bg-white p-3 rounded-lg border border-slate-200 hover:border-indigo-500 transition">
-                            <input type="radio" name="tipoVendedor" value="persona" checked onchange="toggleTipoVendedor()" class="w-4 h-4 text-indigo-600">
-                            <span class="font-bold text-slate-700">Persona Natural</span>
-                        </label>
-                        <label class="flex-1 flex items-center gap-2 cursor-pointer bg-white p-3 rounded-lg border border-slate-200 hover:border-indigo-500 transition">
-                            <input type="radio" name="tipoVendedor" value="empresa" onchange="toggleTipoVendedor()" class="w-4 h-4 text-indigo-600">
-                            <span class="font-bold text-slate-700">Empresa / Tienda</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div id="camposPersona" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">1. Foto de tu Cédula (Ambas caras)</label>
-                        <input type="file" id="kycFotoCedula" accept="image/*" multiple required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm">
-                    </div>
-                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                        <label class="block text-sm font-bold text-indigo-900 mb-2">2. Selfie de Seguridad</label>
-                        <p class="text-xs text-indigo-700 mb-3">Sube una selfie tuya sosteniendo un papel con este código:</p>
-                        <div class="text-center bg-white py-3 rounded-lg border-2 border-dashed border-indigo-300 mb-3">
-                            <span class="text-3xl font-black tracking-widest text-indigo-600" id="codigoSeguridad">000000</span>
-                        </div>
-                        <input type="file" id="kycFotoSelfie" accept="image/*" required class="w-full bg-white border border-indigo-200 rounded-xl p-2 text-sm">
-                    </div>
-                </div>
-
-                <div id="camposEmpresa" class="space-y-4 hidden">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">1. NIT de la Empresa</label>
-                        <input type="number" id="kycNit" placeholder="Ej. 900123456-7" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">2. Cámara de Comercio o RUT</label>
-                        <input type="file" id="kycFotoRut" accept="image/*" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm">
-                    </div>
-                </div>
-
-                <div id="camposEmpresa" class="space-y-4 hidden">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">1. NIT de la Empresa</label>
-                        <input type="number" id="kycNit" placeholder="Ej. 900123456-7" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">2. Cámara de Comercio o RUT</label>
-                        <input type="file" accept="image/*" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm">
-                    </div>
-                </div>
-
-                <!-- Tratamiento de Datos -->
-                <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
-                    <p class="text-xs text-slate-500 text-justify mb-3 leading-relaxed">
-                        <strong>Autorización (Ley 1581 de 2012):</strong> Autorizo a CrediNova S.A.S. para recolectar y almacenar mis datos biométricos e información legal con el fin exclusivo de validar mi identidad y prevenir fraudes.
-                    </p>
-                    <label class="flex items-start gap-2 cursor-pointer">
-                        <input type="checkbox" required class="mt-1 w-4 h-4 text-indigo-600">
-                        <span class="text-sm font-bold text-slate-700">He leído y acepto el tratamiento de datos.</span>
-                    </label>
-                </div>
-
-                <button type="submit" id="btnKYC" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition shadow-lg text-lg flex justify-center items-center gap-2">
-                    <i class="fa-solid fa-paper-plane"></i> Enviar a Revisión
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Publicar Producto -->
-    <div id="modalPublicar" class="modal overflow-y-auto py-10 px-4">
-        <div class="bg-white rounded-3xl w-full max-w-2xl p-8 relative shadow-2xl m-auto">
-            <button onclick="cerrarModal('modalPublicar')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            <h2 class="text-2xl font-bold mb-6"><i class="fa-solid fa-tag text-accent"></i> Publicar Artículo</h2>
-            
-            <form id="formPublicar" onsubmit="subirProducto(event)">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Categoría Principal</label>
-                        <select id="pubCatPrincipal" onchange="actualizarSubcategorias()" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent">
-                            <option value="">Selecciona...</option>
-                            <option value="Transportes">🚗 Transportes</option>
-                            <option value="Tecnología">💻 Tecnología</option>
-                            <option value="Moda">👕 Moda</option>
-                            <option value="Hogar">🛋️ Hogar</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">¿Qué es exactamente?</label>
-                        <select id="pubSubCat" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent disabled:bg-slate-100 disabled:text-slate-400" disabled>
-                            <option value="">Primero elige una categoría</option>
-                        </select>
-                    </div>
-                    <div class="col-span-full">
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Título del Anuncio</label>
-                        <input type="text" id="pubTitulo" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent" placeholder="Ej. iPhone 13 Pro Max 128GB">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Precio ($)</label>
-                        <input type="number" id="pubPrecio" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent" placeholder="1500000">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Ubicación de Envío</label>
-                        <select id="pubCiudad" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent">
-                            <option value="Cartagena">Cartagena</option><option value="Bogota">Bogotá</option><option value="Medellin">Medellín</option><option value="Barranquilla">Barranquilla</option><option value="Cali">Cali</option>
-                        </select>
-                    </div>
-                    <div class="col-span-full">
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Galería de Fotos (Máx 4)</label>
-                        <div class="border-2 border-dashed border-accent bg-indigo-50 rounded-2xl p-6 text-center cursor-pointer hover:bg-indigo-100 transition relative">
-                            <i class="fa-solid fa-images text-4xl text-accent mb-2"></i>
-                            <p class="font-bold text-slate-700">Toca para abrir tu galería</p>
-                            <input type="file" id="pubFotos" accept="image/*" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewFotos(this)">
-                        </div>
-                        <div id="preview-container" class="flex gap-2 mt-3 overflow-x-auto pb-2"></div>
-                    </div>
-                    <div class="col-span-full">
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Descripción</label>
-                        <textarea id="pubDesc" required rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-accent"></textarea>
-                    </div>
-                </div>
-                <button type="submit" id="btnSubir" class="w-full bg-accent hover:bg-indigo-600 text-white font-bold py-4 rounded-xl transition shadow-lg text-lg flex justify-center items-center gap-2">
-                    <i class="fa-solid fa-rocket"></i> Publicar Artículo
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmación Elegante -->
-    <div id="modalConfirm" class="modal px-4 z-[2000]">
-        <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
-            <div class="w-16 h-16 rounded-full bg-red-100 text-red-500 mx-auto flex items-center justify-center text-3xl mb-4">
-                <i class="fa-solid fa-circle-exclamation"></i>
-            </div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2" id="confirmTitle">Confirmar Acción</h3>
-            <p class="text-slate-500 mb-6 text-sm" id="confirmText">¿Estás seguro de hacer esto?</p>
-            <div class="flex gap-3">
-                <button onclick="cerrarConfirmacion()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-200 transition">Cancelar</button>
-                <button id="btnConfirmarAccion" class="flex-1 bg-danger text-white font-bold py-3 rounded-xl hover:bg-rose-600 transition shadow-lg">Sí, Confirmar</button>
-            </div>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // 🔥 TUS CLAVES Y DATOS REALES 🔥
-        const firebaseConfig = {
-            apiKey: "AIzaSyAETMBFi4sWhvt-lrTzInETggb5Pog9xt8", 
-            authDomain: "credinova-8bdf3.firebaseapp.com",
-            projectId: "credinova-8bdf3",
-            storageBucket: "credinova-8bdf3.firebasestorage.app",
-            messagingSenderId: "594487614922",
-            appId: "1:594487614922:web:6d2c32e2ee28e357b04333"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        const CORREO_DEL_JEFE = "oscarlewisguerrerogonzalez@gmail.com"; 
-
-        // Variables Globales
-        let usuarioActual = null;
-        let estadoKyc = "no_enviado"; 
-        let arrayFotosBase64 = []; 
-        let productosGlobales = [];
-        let callbackConfirmacion = null;
-
-        const mapaCategorias = {
-            "Transportes": ["Moto", "Carro", "Bicicleta", "Scooter", "Repuestos"],
-            "Tecnología": ["Celular", "Televisor", "Computador", "Consola", "Accesorios"],
-            "Moda": ["Suéter", "Pantaloneta", "Zapatos", "Reloj/Gafas"],
-            "Hogar": ["Mueble", "Electrodoméstico", "Decoración"]
-        };
-
-        
-        // Notificaciones Flotantes (Reemplaza a alert)
-        window.mostrarToast = (mensaje, tipo = 'info') => {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            let icon = 'fa-circle-info';
-            if (tipo === 'success') icon = 'fa-circle-check';
-            if (tipo === 'error') icon = 'fa-circle-xmark';
-
-            toast.className = `toast ${tipo}`;
-            toast.innerHTML = `<i class="fa-solid ${icon} text-xl"></i> <span>${mensaje}</span>`;
-            
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.add('fade-out');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
-        };
-
-        // Modal de Confirmación (Reemplaza a confirm)
-        window.pedirConfirmacion = (titulo, texto, onConfirm) => {
-            document.getElementById('confirmTitle').innerText = titulo;
-            document.getElementById('confirmText').innerText = texto;
-            callbackConfirmacion = onConfirm;
-            document.getElementById('modalConfirm').classList.add('active');
-        };
-
-        window.cerrarConfirmacion = () => {
-            document.getElementById('modalConfirm').classList.remove('active');
-            callbackConfirmacion = null;
-        };
-
-        document.getElementById('btnConfirmarAccion').addEventListener('click', () => {
-            if(callbackConfirmacion) callbackConfirmacion();
-            cerrarConfirmacion();
-        });
-
-        // Controles de Vistas y Modales
-        window.actualizarSubcategorias = () => {
-            const principal = document.getElementById('pubCatPrincipal').value;
-            const sub = document.getElementById('pubSubCat');
-            sub.innerHTML = '';
-            if(principal && mapaCategorias[principal]) {
-                sub.disabled = false;
-                mapaCategorias[principal].forEach(item => { sub.innerHTML += `<option value="${item}">${item}</option>`; });
+            let galeriaHtml = '';
+            if(p.images && p.images.length > 0) {
+                galeriaHtml = p.images.map(img => `<img src="${img}" class="w-20 h-20 object-contain rounded-lg border border-gray-200 cursor-pointer hover:border-brand-purple bg-white" onclick="document.getElementById('main-product-image').src='${img}'">`).join('');
             } else {
-                sub.disabled = true;
-                sub.innerHTML = '<option value="">Primero elige una categoría</option>';
+                galeriaHtml = `<img src="${p.image}" class="w-20 h-20 object-contain rounded-lg border border-gray-200 bg-white">`;
             }
-        };
 
-        window.abrirModal = (id) => {
-            document.getElementById(id).classList.add('active');
-            if(id === 'modalKYC') document.getElementById('codigoSeguridad').innerText = Math.floor(100000 + Math.random() * 900000);
-        };
-        window.cerrarModal = (id) => document.getElementById(id).classList.remove('active');
-        const formatoDinero = (num) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(num);
-
-        window.mostrarVista = (vista) => {
-            document.getElementById('vista-inicio').classList.add('hidden');
-            document.getElementById('vista-dashboard').classList.add('hidden');
-            document.getElementById('vista-detalle').classList.add('hidden');
-            document.getElementById('vista-admin').classList.add('hidden');
-            document.getElementById(`vista-${vista}`).classList.remove('hidden');
-            if(vista === 'inicio') cargarProductosUI(productosGlobales);
-            if(vista === 'admin') cargarKycPendientes();
-        };
-
-        window.filtrarCategoria = (categoria) => {
-            mostrarVista('inicio');
-            document.getElementById('titulo-catalogo').innerText = `Categoría: ${categoria}`;
-            const filtrados = productosGlobales.filter(p => p.categoriaPrincipal === categoria);
-            cargarProductosUI(filtrados);
-        };
-
-        onAuthStateChanged(auth, async (user) => {
-            const menu = document.getElementById('userMenu');
-            if (user) {
-                usuarioActual = user;
-                const esAdmin = user.email === CORREO_DEL_JEFE;
-
-                const docSnap = await getDoc(doc(db, "vendedores", user.uid));
-                if (docSnap.exists()) {
-                    estadoKyc = docSnap.data().estado;
-                } else {
-                    estadoKyc = "no_enviado";
-                }
-
-                let botonesMenu = `
-                    <button class="bg-slate-100 text-slate-800 hover:bg-slate-200 px-4 py-2 rounded-xl font-bold flex items-center gap-2" onclick="mostrarVista('dashboard')">
-                        <i class="fa-solid fa-store"></i> Mi Panel
-                    </button>
-                `;
-                
-                if(esAdmin) {
-                    botonesMenu += `
-                        <button class="bg-danger text-white px-4 py-2 rounded-xl font-bold shadow-lg" onclick="mostrarVista('admin')">
-                            <i class="fa-solid fa-shield"></i> Aprobar Tiendas
-                        </button>
-                    `;
-                }
-                
-                botonesMenu += `<button class="text-sm font-bold text-red-400 hover:text-red-500 ml-2" onclick="cerrarSesion()">Salir</button>`;
-                menu.innerHTML = botonesMenu;
-
-                if(document.getElementById('dash-email')) {
-                    document.getElementById('dash-email').innerText = user.email;
-                    const kycTexto = document.getElementById('estado-kyc-texto');
-                    if(estadoKyc === 'aprobado') {
-                        kycTexto.innerHTML = `<i class="fa-solid fa-check-circle text-success"></i> Aprobado (Puedes vender)`;
-                        kycTexto.classList.replace('text-warning', 'text-success');
-                    } else if (estadoKyc === 'pendiente') {
-                        kycTexto.innerHTML = `<i class="fa-solid fa-clock text-warning"></i> En revisión por jefatura`;
-                        kycTexto.classList.replace('text-success', 'text-warning');
-                    } else {
-                        kycTexto.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> Faltan documentos`;
-                        kycTexto.classList.replace('text-success', 'text-danger');
-                    }
-                }
-
-            } else {
-                usuarioActual = null; estadoKyc = "no_enviado";
-                menu.innerHTML = `
-                    <button class="text-sm font-semibold hover:text-accent" onclick="abrirModal('modalLogin')">Ingresar</button>
-                    <button class="bg-accent hover:bg-indigo-600 px-5 py-2 rounded-xl font-bold transition shadow-lg shadow-indigo-500/30" onclick="abrirModal('modalLogin')">Regístrate</button>
-                `;
-            }
-        });
-
-        window.procesarRegistro = async () => {
-            const email = document.getElementById('authEmail').value;
-            const pass = document.getElementById('authPass').value;
-            try {
-                await createUserWithEmailAndPassword(auth, email, pass);
-                cerrarModal('modalLogin'); 
-                mostrarToast("¡Cuenta creada exitosamente! Bienvenido.", "success");
-                mostrarVista('dashboard');
-            } catch (error) { 
-                mostrarToast(error.message, "error"); 
-            }
-        };
-
-        window.procesarLogin = async () => {
-            try {
-                await signInWithEmailAndPassword(auth, document.getElementById('authEmail').value, document.getElementById('authPass').value);
-                cerrarModal('modalLogin'); 
-                mostrarToast("Sesión iniciada correctamente", "success");
-                mostrarVista('dashboard');
-            } catch (error) { 
-                mostrarToast("Correo o contraseña incorrectos", "error"); 
-            }
-        };
-
-        window.cerrarSesion = () => { signOut(auth); mostrarVista('inicio'); mostrarToast("Has cerrado sesión", "info"); };
-        
-        window.recuperarPassword = () => { 
-            const email = document.getElementById('authEmail').value;
-            if(!email) return mostrarToast("Por favor, ingresa tu correo primero", "error");
-            
-            sendPasswordResetEmail(auth, email).then(() => {
-                mostrarToast('Se ha enviado un correo para cambiar tu contraseña.', 'success');
-            }).catch(e => mostrarToast("Error al enviar recuperación", "error")); 
-        }
-
-        window.intentarPublicar = () => {
-            if(!usuarioActual) return abrirModal('modalLogin');
-            
-            if(estadoKyc === 'aprobado') {
-                abrirModal('modalPublicar');
-            } else if (estadoKyc === 'pendiente') {
-                mostrarToast("⏳ Tus documentos están siendo revisados por el equipo.", "info");
-            } else {
-                abrirModal('modalKYC');
-            }
-        };
-
-        window.toggleTipoVendedor = () => {
-            const tipo = document.querySelector('input[name="tipoVendedor"]:checked').value;
-            const camposPersona = document.getElementById('camposPersona');
-            const camposEmpresa = document.getElementById('camposEmpresa');
-            
-            if(tipo === 'empresa') {
-                camposPersona.classList.add('hidden'); camposEmpresa.classList.remove('hidden');
-            } else {
-                camposEmpresa.classList.add('hidden'); camposPersona.classList.remove('hidden');
-            }
-        };
-
-        window.enviarKYC = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnKYC');
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Subiendo documentos...`; btn.disabled = true;
-
-            try {
-                const tipo = document.querySelector('input[name="tipoVendedor"]:checked').value;
-                let docsBase64 = [];
-
-                // Capturar y comprimir las imágenes según si es Persona o Empresa
-                if(tipo === 'persona') {
-                    const inputCedula = document.getElementById('kycFotoCedula');
-                    const inputSelfie = document.getElementById('kycFotoSelfie');
-                    if(inputCedula.files.length > 0) docsBase64.push(await comprimirYConvertirABase64(inputCedula.files[0]));
-                    if(inputCedula.files.length > 1) docsBase64.push(await comprimirYConvertirABase64(inputCedula.files[1])); // Cara trasera
-                    if(inputSelfie.files.length > 0) docsBase64.push(await comprimirYConvertirABase64(inputSelfie.files[0]));
-                } else {
-                    const inputRut = document.getElementById('kycFotoRut');
-                    if(inputRut.files.length > 0) docsBase64.push(await comprimirYConvertirABase64(inputRut.files[0]));
-                }
-
-                await setDoc(doc(db, "vendedores", usuarioActual.uid), {
-                    email: usuarioActual.email,
-                    tipo: tipo,
-                    nit: document.getElementById('kycNit') ? document.getElementById('kycNit').value : '',
-                    documentos: docsBase64, // Aquí enviamos las fotos a tu panel
-                    estado: 'pendiente',
-                    fechaSolicitud: Date.now()
-                });
-                
-                estadoKyc = 'pendiente';
-                mostrarToast("✅ Solicitud enviada a revisión.", "success");
-                cerrarModal('modalKYC');
-                mostrarVista('dashboard');
-                onAuthStateChanged(auth, (user) => { if(user) usuarioActual = user; }); 
-                
-            } catch (error) {
-                mostrarToast("Error enviando información.", "error");
-                console.error(error);
-            } finally {
-                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Enviar a Revisión`; btn.disabled = false;
-            }
-        };
-
-        function cargarKycPendientes() {
-            const contenedor = document.getElementById('lista-kyc-pendientes');
-            contenedor.innerHTML = '<li class="p-8 text-center"><div class="loader"></div></li>';
-            
-            const q = query(collection(db, "vendedores"));
-            onSnapshot(q, (snapshot) => {
-                contenedor.innerHTML = '';
-                let hayPendientes = false;
-
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if(data.estado === 'pendiente') {
-                        hayPendientes = true;
+            appContent.innerHTML = `
+                <div class="fade-in bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-10">
+                    <!-- Galería -->
+                    <div class="w-full md:w-1/2">
+                        <button onclick="renderCatalog()" class="mb-4 text-gray-500 hover:text-brand-dark font-medium text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Volver al catálogo</button>
                         
-                        // Procesar las fotos para mostrarlas en el panel del jefe
-                        let fotosHtml = '';
-                        if(data.documentos && data.documentos.length > 0) {
-                            fotosHtml = `<div class="flex flex-wrap gap-3 mt-4 p-3 bg-slate-100 rounded-xl">` + 
-                                data.documentos.map(img => `<img src="${img}" class="w-24 h-24 object-cover rounded-lg border-2 border-white shadow-sm cursor-pointer hover:border-accent transition hover:scale-105" onclick="window.open('${img}', '_blank')" title="Clic para ver en tamaño completo">`).join('')
-                            + `</div>`;
-                        }
-
-                        contenedor.innerHTML += `
-                            <li class="p-6 flex flex-col md:flex-row items-start md:items-center justify-between hover:bg-slate-50 border-b border-slate-200 gap-4">
-                                <div class="w-full">
-                                    <h4 class="font-bold text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-user text-accent"></i> ${data.email}</h4>
-                                    <div class="flex gap-2 mt-2">
-                                        <span class="text-xs text-slate-600 uppercase font-bold bg-slate-200 px-3 py-1 rounded-full">Tipo: ${data.tipo}</span>
-                                        ${data.nit ? `<span class="text-xs text-slate-600 uppercase font-bold bg-slate-200 px-3 py-1 rounded-full">NIT: ${data.nit}</span>` : ''}
-                                    </div>
-                                    <p class="text-xs text-slate-500 mt-2"><i class="fa-solid fa-calendar"></i> Fecha solicitud: ${new Date(data.fechaSolicitud).toLocaleDateString()}</p>
-                                    ${fotosHtml}
-                                </div>
-                                <div class="flex flex-row md:flex-col gap-2 w-full md:w-40 shrink-0">
-                                    <button onclick="aprobarVendedor('${doc.id}')" class="flex-1 bg-success text-white px-4 py-3 rounded-xl font-bold hover:bg-emerald-600 transition shadow-lg flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> Aprobar</button>
-                                    <button onclick="rechazarVendedor('${doc.id}')" class="flex-1 bg-slate-200 text-slate-700 px-4 py-3 rounded-xl font-bold hover:bg-slate-300 transition flex items-center justify-center gap-2"><i class="fa-solid fa-xmark"></i> Rechazar</button>
-                                </div>
-                            </li>
-                        `;
-                    }
-                });
-
-                if(!hayPendientes) {
-                    contenedor.innerHTML = '<li class="p-8 text-center font-bold text-slate-500">Todo limpio. No hay vendedores por aprobar.</li>';
-                }
-            });
-        }
-
-        window.aprobarVendedor = (uid) => {
-            pedirConfirmacion("Aprobar Vendedor", "¿Seguro que quieres aprobar esta tienda? Ya podrá publicar productos visibles para todos.", async () => {
-                await updateDoc(doc(db, "vendedores", uid), { estado: 'aprobado' });
-                mostrarToast("Vendedor aprobado con éxito.", "success");
-            });
-        };
-
-        window.rechazarVendedor = (uid) => {
-            pedirConfirmacion("Rechazar Solicitud", "¿Rechazar a este vendedor? Tendrá que volver a enviar todos los documentos.", async () => {
-                await deleteDoc(doc(db, "vendedores", uid));
-                mostrarToast("Solicitud rechazada y eliminada.", "info");
-            });
-        };
-
-        window.previewFotos = async function(input) {
-            const container = document.getElementById('preview-container');
-            container.innerHTML = ''; arrayFotosBase64 = []; 
-            const archivos = Array.from(input.files).slice(0, 4); 
-            
-            for (let file of archivos) {
-                const base64Str = await comprimirYConvertirABase64(file);
-                arrayFotosBase64.push(base64Str);
-                const img = document.createElement('img'); img.src = base64Str; img.className = "w-16 h-16 object-cover rounded-lg border border-slate-300";
-                container.appendChild(img);
-            }
-        };
-
-        function comprimirYConvertirABase64(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader(); reader.readAsDataURL(file);
-                reader.onload = (e) => {
-                    const img = new Image(); img.src = e.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const scale = 500 / img.width; canvas.width = 500; canvas.height = img.height * scale;
-                        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.6));
-                    }
-                }
-            });
-        }
-
-        window.subirProducto = async (e) => {
-            e.preventDefault();
-            if(arrayFotosBase64.length === 0) return mostrarToast("Sube al menos 1 foto", "error");
-            const btn = document.getElementById('btnSubir'); btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Publicando...`; btn.disabled = true;
-
-            try {
-                await addDoc(collection(db, "productos"), {
-                    titulo: document.getElementById('pubTitulo').value,
-                    precio: parseFloat(document.getElementById('pubPrecio').value),
-                    categoriaPrincipal: document.getElementById('pubCatPrincipal').value,
-                    subCategoria: document.getElementById('pubSubCat').value,
-                    ciudad: document.getElementById('pubCiudad').value,
-                    descripcion: document.getElementById('pubDesc').value,
-                    fotosBase64: arrayFotosBase64,
-                    vendedorId: usuarioActual.uid,
-                    vendedorEmail: usuarioActual.email,
-                    fecha: Date.now()
-                });
-                mostrarToast("¡Publicado exitosamente en el catálogo!", "success");
-                document.getElementById('formPublicar').reset(); document.getElementById('preview-container').innerHTML = ''; arrayFotosBase64 = [];
-                cerrarModal('modalPublicar');
-            } catch (error) { mostrarToast("Error de conexión.", "error"); } finally { btn.innerHTML = `<i class="fa-solid fa-rocket"></i> Publicar Artículo`; btn.disabled = false; }
-        };
-
-        const qProd = query(collection(db, "productos"), orderBy("fecha", "desc"));
-        onSnapshot(qProd, (snapshot) => {
-            productosGlobales = [];
-            snapshot.forEach(doc => { productosGlobales.push({id: doc.id, ...doc.data()}); });
-            if(!document.getElementById('vista-inicio').classList.contains('hidden')) cargarProductosUI(productosGlobales);
-            cargarMisProductos();
-        });
-
-        function cargarProductosUI(lista) {
-            const contenedor = document.getElementById('catalogo-grid');
-            contenedor.innerHTML = '';
-            if (lista.length === 0) return contenedor.innerHTML = `<div class="col-span-full text-center py-10 bg-white rounded-2xl border border-dashed border-slate-300"><p class="text-slate-500 font-bold">Catálogo vacío por el momento.</p></div>`;
-
-            lista.forEach(prod => {
-                const fotoPortada = prod.fotosBase64[0] || 'https://placehold.co/400x300/e2e8f0/0f172a?text=Sin+Imagen';
-                contenedor.innerHTML += `
-                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover-scale cursor-pointer relative" onclick="verDetalle('${prod.id}')">
-                        ${prod.fotosBase64.length > 1 ? `<div class="absolute top-6 right-6 bg-slate-900/80 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-lg z-10"><i class="fa-solid fa-images"></i> ${prod.fotosBase64.length}</div>` : ''}
-                        <img src="${fotoPortada}" class="w-full h-48 object-cover rounded-xl mb-4 bg-slate-100">
-                        <div class="flex justify-between items-start mb-1">
-                            <p class="text-xs font-bold text-accent"><i class="fa-solid fa-location-dot"></i> ${prod.ciudad}</p>
-                            <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded font-semibold">${prod.subCategoria}</span>
+                        <!-- AQUI SE ARREGLÓ EL RECORTE DE LA IMAGEN (object-contain y bg-gray-50) -->
+                        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-4 flex justify-center">
+                            <img id="main-product-image" src="${p.images ? p.images[0] : p.image}" class="w-full h-[400px] object-contain rounded-xl mix-blend-multiply">
                         </div>
-                        <h3 class="font-bold text-slate-800 leading-tight mb-2 line-clamp-2 h-10">${prod.titulo}</h3>
-                        <p class="text-2xl font-black text-slate-900">${formatoDinero(prod.precio)}</p>
+                        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                            ${galeriaHtml}
+                        </div>
                     </div>
-                `;
-            });
-        }
-
-        function cargarMisProductos() {
-            if(!usuarioActual) return;
-            const mis = productosGlobales.filter(p => p.vendedorId === usuarioActual.uid);
-            if(document.getElementById('dash-count')) document.getElementById('dash-count').innerText = mis.length;
-            const lista = document.getElementById('lista-mis-productos');
-            if(lista) {
-                lista.innerHTML = '';
-                if(mis.length === 0) return lista.innerHTML = '<li class="p-8 text-center text-slate-500 font-bold">No has publicado nada aún.</li>';
-                mis.forEach(p => {
-                    const pic = p.fotosBase64[0] || 'https://placehold.co/100x100/e2e8f0/0f172a?text=Foto';
-                    lista.innerHTML += `
-                        <li class="p-4 flex justify-between hover:bg-slate-50 items-center">
-                            <div class="flex gap-4"><img src="${pic}" class="w-16 h-16 rounded-lg object-cover">
-                            <div><h4 class="font-bold">${p.titulo}</h4><p class="text-accent font-black">${formatoDinero(p.precio)}</p></div></div>
-                            <button onclick="eliminarProducto('${p.id}')" class="text-danger p-3 bg-red-50 hover:bg-red-100 rounded-xl transition"><i class="fa-solid fa-trash"></i></button>
-                        </li>`;
-                });
-            }
-        }
-
-        window.eliminarProducto = (id) => { 
-            pedirConfirmacion("Eliminar Publicación", "¿Estás seguro que deseas borrar este producto del catálogo? Nadie más lo podrá ver.", async () => {
-                await deleteDoc(doc(db, "productos", id)); 
-                mostrarToast("Producto eliminado del marketplace.", "success");
-            });
-        };
-
-        window.verDetalle = (id) => {
-            const prod = productosGlobales.find(p => p.id === id);
-            const vista = document.getElementById('vista-detalle');
-            const fotosHtml = prod.fotosBase64.map((f, i) => `<img src="${f}" class="gallery-thumb ${i===0?'active':''}" onclick="cambiarFotoPrincipal(this, '${f}')">`).join('');
-
-            vista.innerHTML = `
-                <button onclick="mostrarVista('inicio')" class="mb-6 font-bold text-slate-500 hover:text-accent flex items-center gap-2 transition hover:-translate-x-1"><i class="fa-solid fa-arrow-left"></i> Volver al Catálogo</button>
-                <div class="bg-white rounded-3xl p-6 md:p-10 flex flex-col md:flex-row gap-10 shadow-sm border border-slate-100">
-                    <div class="w-full md:w-1/2">
-                        <img id="foto-principal-detalle" src="${prod.fotosBase64[0]}" class="w-full h-[400px] object-cover rounded-2xl mb-4 bg-slate-50 border border-slate-100">
-                        ${prod.fotosBase64.length > 1 ? `<div class="gallery-container">${fotosHtml}</div>` : ''}
-                    </div>
-                    <div class="w-full md:w-1/2">
+                    
+                    <!-- Info -->
+                    <div class="w-full md:w-1/2 flex flex-col justify-center">
                         <div class="flex items-center gap-3 mb-3">
-                            <span class="bg-indigo-50 text-indigo-700 font-bold px-4 py-1.5 rounded-full text-xs uppercase border border-indigo-100">${prod.categoriaPrincipal}</span>
-                            <span class="text-xs text-slate-500"><i class="fa-solid fa-location-dot"></i> Envío desde ${prod.ciudad}</span>
+                            <span class="bg-brand-bg text-brand-blue text-xs font-bold px-3 py-1 rounded-full uppercase">${p.category}</span>
+                            <span class="text-gray-400 text-sm"><i class="fa-solid fa-location-dot"></i> Envío desde ${p.city || 'Colombia'}</span>
                         </div>
-                        <h1 class="text-3xl font-black mt-3 mb-2 text-slate-800">${prod.titulo}</h1>
-                        <p class="text-4xl font-black mb-6 text-slate-900">${formatoDinero(prod.precio)}</p>
                         
-                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-6">
-                            <h4 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-circle-info text-accent"></i> Descripción del vendedor</h4>
-                            <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">${prod.descripcion}</p>
+                        <h1 class="text-3xl font-bold text-brand-dark mb-2">${p.name}</h1>
+                        
+                        <div class="mb-6">
+                            ${p.originalPrice > p.price ? `<span class="bg-brand-purple text-white text-xs font-bold px-2 py-1 rounded-md mr-2">Rebajado</span> <span class="text-sm text-gray-400 line-through">${formatMoney(p.originalPrice)}</span>` : ''}
+                            <p class="text-4xl font-black text-brand-dark mt-1">${formatMoney(p.price)}</p>
                         </div>
 
-                        <!-- NUEVO: Simulador de Crédito -->
-                        <div class="bg-indigo-50 rounded-2xl p-5 border border-indigo-100 mb-6">
-                            <div class="flex justify-between items-center mb-3">
-                                <h4 class="font-bold text-indigo-900"><i class="fa-solid fa-calculator"></i> Simulador de Cuotas</h4>
-                                <span class="bg-accent text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Aprobación Rápida</span>
-                            </div>
-                            <div class="flex gap-2 mb-3">
+                        <p class="text-gray-600 text-sm mb-6 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100"><i class="fa-solid fa-circle-info text-brand-purple mr-2"></i> <strong>Descripción del vendedor</strong><br>${p.desc}</p>
+                        
+                        <!-- Simulador de Cuotas -->
+                        <div class="bg-brand-bg rounded-2xl p-5 border border-brand-purple/20 mb-8 relative">
+                            <div class="absolute -top-3 right-4 bg-brand-purple text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Aprobación Rápida</div>
+                            <h4 class="font-bold text-brand-dark mb-4 text-sm"><i class="fa-solid fa-calculator text-brand-purple"></i> Simulador de Cuotas</h4>
+                            <div class="flex gap-4 mb-4">
                                 <div class="w-1/2">
-                                    <label class="text-xs text-indigo-700 font-bold">Cuota Inicial ($)</label>
-                                    <input type="number" id="sim-inicial-${prod.id}" class="w-full rounded-lg border-none p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-accent" placeholder="Ej. 0" onkeyup="calcularCuotaSimulador(${prod.precio}, '${prod.id}')">
+                                    <label class="text-xs font-bold text-gray-500">Cuota Inicial ($)</label>
+                                    <input type="number" id="sim-inicial" value="${Math.floor(p.price * 0.2)}" class="w-full p-2 rounded-lg border border-gray-200 mt-1 text-sm font-bold" onchange="calcularCuota(${p.price})">
                                 </div>
                                 <div class="w-1/2">
-                                    <label class="text-xs text-indigo-700 font-bold">Meses</label>
-                                    <select id="sim-meses-${prod.id}" class="w-full rounded-lg border-none p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-accent" onchange="calcularCuotaSimulador(${prod.precio}, '${prod.id}')">
-                                        <option value="12">12 meses</option>
-                                        <option value="24" selected>24 meses</option>
-                                        <option value="36">36 meses</option>
+                                    <label class="text-xs font-bold text-gray-500">Meses</label>
+                                    <select id="sim-meses" class="w-full p-2 rounded-lg border border-gray-200 mt-1 text-sm font-bold" onchange="calcularCuota(${p.price})">
+                                        <option value="3">3 meses</option>
+                                        <option value="6">6 meses</option>
+                                        <option value="12" selected>12 meses</option>
+                                        <option value="24">24 meses</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-indigo-700">Cuota mensual estimada:</p>
-                                <p class="text-2xl font-black text-indigo-900" id="sim-resultado-${prod.id}">Calculando...</p>
+                                <p class="text-xs text-brand-blue font-bold">Cuota mensual estimada:</p>
+                                <p class="text-2xl font-black text-brand-dark" id="sim-resultado">${formatMoney((p.price - Math.floor(p.price * 0.2)) / 12)}</p>
                             </div>
                         </div>
 
-                        <div class="flex gap-3 mb-6">
-                            <button onclick="window.open('https://wa.me/?text=Hola,%20me%20interesa%20tu%20producto:%20${prod.titulo}', '_blank')" class="flex-1 bg-success hover:bg-emerald-600 text-white font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition shadow-lg shadow-emerald-500/30">
-                                <i class="fa-brands fa-whatsapp text-2xl"></i> Contactar Vendedor
-                            </button>
-                            <button onclick="compartirProducto('${prod.titulo}')" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-4 rounded-xl transition font-bold shadow-lg flex justify-center items-center">
-                                <i class="fa-solid fa-share-nodes text-xl"></i>
-                            </button>
-                        </div>
-
-                        <div class="bg-emerald-50 text-emerald-700 p-4 rounded-xl font-bold mb-6 flex items-center gap-3 border border-emerald-100">
-                            <i class="fa-solid fa-shield-check text-2xl"></i>
+                        <!-- Perfil Vendedor Mini -->
+                        <div class="flex items-center gap-4 mb-6 p-4 border border-gray-200 rounded-xl">
+                            <div class="w-10 h-10 bg-brand-blue/10 rounded-full flex items-center justify-center text-brand-blue font-bold text-xl"><i class="fa-solid fa-store"></i></div>
                             <div>
-                                <p class="text-sm">Vendedor Verificado por CrediNova</p>
-                                <p class="text-[10px] uppercase tracking-wider font-semibold opacity-70">Identidad Confirmada</p>
+                                <p class="font-bold text-sm text-gray-800">Vendedor Verificado <i class="fa-solid fa-circle-check text-brand-green"></i></p>
+                                <p class="text-xs text-gray-500">${p.sellerEmail}</p>
                             </div>
                         </div>
-                        <button onclick="window.open('https://wa.me/?text=Hola,%20me%20interesa%20tu%20producto:%20${prod.titulo}', '_blank')" class="w-full bg-success hover:bg-emerald-600 text-white font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition shadow-lg shadow-emerald-500/30">
-                            <i class="fa-brands fa-whatsapp text-2xl"></i> Contactar Vendedor (WhatsApp)
+
+                        <!-- Botones de Acción Modificados (CHAT INTERNO) -->
+                        <div class="flex gap-4">
+                            <button class="w-full bg-brand-purple hover:bg-purple-700 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2" onclick="openInternalChat('${p.sellerEmail}', '${p.id}', '${p.name}')">
+                                <i class="fa-solid fa-comments"></i> Chat Privado
+                            </button>
+                            <button class="bg-brand-dark hover:bg-black text-white px-6 rounded-xl font-bold transition flex items-center justify-center gap-2" onclick="addToCart('${p.id}')">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            calcularCuota(p.price); // Inicializar
+        };
+
+        window.calcularCuota = function(precioTotal) {
+            const inicial = parseInt(document.getElementById('sim-inicial').value) || 0;
+            const meses = parseInt(document.getElementById('sim-meses').value) || 12;
+            const saldo = precioTotal - inicial;
+            
+            if(saldo <= 0) {
+                document.getElementById('sim-resultado').innerText = "$0";
+                return;
+            }
+            // Cálculo simple sin intereses complejos para el simulador
+            const cuota = saldo / meses;
+            document.getElementById('sim-resultado').innerText = formatMoney(cuota);
+        };
+
+        // --- STREAMING_CHUNK: SISTEMA DE CHAT PRIVADO ---
+        window.openInternalChat = function(sellerEmail, productId, productName) {
+            if(!db.currentUser) return showModal('login');
+            if(db.currentUser.email === sellerEmail) return showToast('Este es tu propio producto', 'info');
+
+            // ID único para el chat (Comprador_Vendedor_Producto)
+            let chatId = db.currentUser.email + '_' + sellerEmail + '_' + productId;
+            let existingChat = db.chats.find(c => c.id === chatId);
+
+            if(!existingChat) {
+                existingChat = {
+                    id: chatId,
+                    buyerEmail: db.currentUser.email,
+                    sellerEmail: sellerEmail,
+                    productId: productId,
+                    productName: productName,
+                    messages: []
+                };
+                db.chats.push(existingChat);
+                saveDB();
+            }
+            renderChatRoom(chatId);
+        };
+
+        window.renderChats = function() {
+            if(!db.currentUser) return showModal('login');
+            
+            const myChats = db.chats.filter(c => c.buyerEmail === db.currentUser.email || c.sellerEmail === db.currentUser.email);
+
+            if(myChats.length === 0) {
+                appContent.innerHTML = `<div class="text-center py-32 fade-in"><i class="fa-regular fa-comments text-6xl text-gray-300 mb-4"></i><h2 class="text-2xl font-bold text-gray-700">Tu bandeja está vacía</h2><p class="text-gray-500 mt-2">Busca un producto y contacta al vendedor para iniciar un chat.</p></div>`;
+                return;
+            }
+
+            let html = `<div class="fade-in max-w-4xl mx-auto"><h2 class="text-3xl font-bold mb-8 text-brand-dark"><i class="fa-solid fa-comments text-brand-purple"></i> Mis Conversaciones</h2><div class="space-y-4">`;
+            
+            myChats.forEach(chat => {
+                const isBuyer = chat.buyerEmail === db.currentUser.email;
+                const otherPerson = isBuyer ? chat.sellerEmail : chat.buyerEmail;
+                const roleText = isBuyer ? 'Vendedor' : 'Comprador';
+                const lastMsg = chat.messages.length > 0 ? chat.messages[chat.messages.length-1].text : 'Sin mensajes aún...';
+                
+                html += `
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:shadow-md transition gap-4" onclick="renderChatRoom('${chat.id}')">
+                        <div class="flex items-center gap-4 w-full md:w-auto">
+                            <div class="w-14 h-14 bg-brand-bg rounded-full flex items-center justify-center text-brand-purple font-bold text-2xl"><i class="fa-solid fa-user-astronaut"></i></div>
+                            <div class="flex-grow">
+                                <h4 class="font-bold text-gray-800 text-lg">${chat.productName}</h4>
+                                <p class="text-xs text-brand-blue font-bold mb-1">${roleText}: ${otherPerson}</p>
+                                <p class="text-sm text-gray-500 truncate max-w-xs">${lastMsg}</p>
+                            </div>
+                        </div>
+                        <button class="w-full md:w-auto bg-gray-100 hover:bg-gray-200 text-brand-dark px-6 py-3 rounded-xl text-sm font-bold transition">Abrir Chat</button>
+                    </div>
+                `;
+            });
+            
+            html += `</div></div>`;
+            appContent.innerHTML = html;
+        };
+
+        window.renderChatRoom = function(chatId) {
+            if(!db.currentUser) return showModal('login');
+            const chat = db.chats.find(c => c.id === chatId);
+            if(!chat) return;
+
+            const isBuyer = chat.buyerEmail === db.currentUser.email;
+            const otherPerson = isBuyer ? chat.sellerEmail : chat.buyerEmail;
+
+            let messagesHtml = chat.messages.map(m => {
+                const isMe = m.sender === db.currentUser.email;
+                return `
+                    <div class="flex ${isMe ? 'justify-end' : 'justify-start'} mb-4">
+                        <div class="${isMe ? 'bg-brand-purple text-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl' : 'bg-gray-100 text-gray-800 rounded-tl-2xl rounded-tr-2xl rounded-br-2xl'} px-5 py-3 max-w-[80%] shadow-sm">
+                            <p class="text-sm md:text-base">${m.text}</p>
+                            <p class="text-[10px] ${isMe ? 'text-purple-200' : 'text-gray-400'} text-right mt-1">${m.time}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if(chat.messages.length === 0) {
+                messagesHtml = `<div class="flex flex-col items-center justify-center h-full text-center text-gray-400"><i class="fa-regular fa-hand-spock text-4xl mb-2"></i><p>Inicia la conversación.<br>Escribe un mensaje abajo.</p></div>`;
+            }
+
+            appContent.innerHTML = `
+                <div class="fade-in max-w-4xl mx-auto h-[80vh] flex flex-col bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden">
+                    <!-- Cabecera del Chat -->
+                    <div class="bg-white border-b border-gray-100 p-4 flex items-center gap-4 shadow-sm z-10">
+                        <button onclick="renderChats()" class="text-gray-400 hover:text-brand-dark w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+                        <div class="w-10 h-10 bg-brand-bg rounded-full flex items-center justify-center text-brand-purple"><i class="fa-solid fa-box"></i></div>
+                        <div>
+                            <h3 class="font-bold text-gray-800 leading-tight cursor-pointer hover:text-brand-purple" onclick="renderProductDetail('${chat.productId}')">${chat.productName} <i class="fa-solid fa-link text-xs"></i></h3>
+                            <p class="text-xs text-brand-green font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-green animate-pulse"></span> En línea con ${otherPerson}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Área de Mensajes -->
+                    <div class="flex-grow p-6 overflow-y-auto bg-[#F4F6FA]" id="chat-messages-area">
+                        ${messagesHtml}
+                    </div>
+                    
+                    <!-- Caja de Texto -->
+                    <div class="p-4 bg-white border-t border-gray-100 flex gap-3 items-center">
+                        <button class="text-gray-400 hover:text-brand-purple transition" onclick="showToast('Envío de imágenes próximamente')"><i class="fa-solid fa-paperclip text-xl"></i></button>
+                        <input type="text" id="chat-input" placeholder="Escribe un mensaje seguro..." class="flex-grow bg-gray-100 border border-transparent rounded-full px-6 py-3 outline-none focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-purple-100 transition" onkeypress="if(event.key === 'Enter') sendChatMessage('${chatId}')" autocomplete="off">
+                        <button onclick="sendChatMessage('${chatId}')" class="bg-brand-purple hover:bg-purple-600 text-white w-12 h-12 rounded-full flex items-center justify-center transition shadow-lg transform hover:scale-105">
+                            <i class="fa-solid fa-paper-plane"></i>
                         </button>
                     </div>
                 </div>
             `;
-            mostrarVista('detalle');
-        };
-        
-        window.cambiarFotoPrincipal = (el, src) => { 
-            document.getElementById('foto-principal-detalle').src = src; 
-            document.querySelectorAll('.gallery-thumb').forEach(e => e.classList.remove('active')); 
-            el.classList.add('active'); 
+            
+            // Hacer scroll automático hacia el último mensaje
+            setTimeout(() => {
+                const area = document.getElementById('chat-messages-area');
+                if(area) area.scrollTop = area.scrollHeight;
+            }, 50);
         };
 
-        // --- NUEVAS FUNCIONES PARA MEJORAS ---
-        window.calcularCuotaSimulador = (precioTotal, id) => {
-            const inicialInput = document.getElementById(`sim-inicial-${id}`).value;
-            const meses = parseInt(document.getElementById(`sim-meses-${id}`).value);
-            const inicial = inicialInput ? parseFloat(inicialInput) : 0;
-            
-            const saldo = precioTotal - inicial;
-            const resultadoEl = document.getElementById(`sim-resultado-${id}`);
-            
-            if(saldo <= 0) {
-                resultadoEl.innerText = "$0";
-                return;
-            }
-            // Cálculo de interés estimado (ejemplo: 1.5% mensual)
-            const cuotaMensual = (saldo / meses) + (saldo * 0.015);
-            resultadoEl.innerText = formatoDinero(cuotaMensual);
-        };
+        window.sendChatMessage = function(chatId) {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
 
-        window.compartirProducto = (titulo) => {
-            if (navigator.share) {
-                navigator.share({
-                    title: '¡Mira esto en CrediNova!',
-                    text: `Encontré este increíble producto: ${titulo}. Míralo aquí:`,
-                    url: window.location.href,
-                }).catch(console.error);
-            } else {
-                mostrarToast("¡Enlace copiado! Pégalo en tus redes o WhatsApp.", "success");
+            const chat = db.chats.find(c => c.id === chatId);
+            if(chat) {
+                chat.messages.push({
+                    sender: db.currentUser.email,
+                    text: text,
+                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                });
+                saveDB();
+                renderChatRoom(chatId); // Recargar para ver el mensaje
             }
         };
 
-    </script>
-</body>
-</html>
+        // --- STREAMING_CHUNK: Páginas Legales ---
+<!-- ... existing code ... -->
