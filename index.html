@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- El translate="no" evita que Google Translate rompa el código interno -->
 <html lang="es" translate="no">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +7,7 @@
     <title>CrediNova - Compra y Vende a Cuotas</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <script>
@@ -14,774 +15,644 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Poppins', 'sans-serif'] },
-                    colors: {
-                        brand: {
-                            dark: '#0D1324',
-                            purple: '#7C3AED',
-                            blue: '#2563EB',
-                            green: '#06D6A0',
-                            bg: '#F4F6FA',
-                            gray: '#E2E8F0'
-                        }
-                    }
+                    colors: { brand: { dark: '#0D1324', purple: '#7C3AED', blue: '#2563EB', green: '#06D6A0' } }
                 }
             }
         }
     </script>
-
     <style>
-        body { background-color: #F4F6FA; color: #0D1324; overflow-x: hidden; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        body { background-color: #F8FAFC; color: #0D1324; overflow-x: hidden; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Scrollbar invisible para mejor diseño */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
-    <header class="bg-brand-dark text-white sticky top-0 z-40 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center cursor-pointer transform transition hover:scale-105" onclick="renderHome()">
-                <div class="bg-gradient-to-br from-brand-blue to-brand-purple text-white p-2 rounded-lg mr-2 shadow-lg">
-                    <i class="fa-solid fa-bolt text-2xl font-black"></i>
+    <header class="bg-brand-dark text-white sticky top-0 z-50 shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+            <!-- Logo -->
+            <div class="flex items-center cursor-pointer transform hover:scale-105 transition" onclick="render('home')">
+                <div class="bg-gradient-to-br from-brand-blue to-brand-purple text-white p-2 rounded-lg mr-3 shadow-lg">
+                    <i class="fa-solid fa-bolt text-2xl"></i>
                 </div>
-                <div>
-                    <h1 class="text-2xl font-bold tracking-tight leading-none">CrediNova</h1>
-                </div>
+                <h1 class="text-2xl font-black tracking-tight">CrediNova</h1>
             </div>
 
-            <div class="flex-grow max-w-2xl mx-4 hidden md:flex">
-                <div class="flex w-full bg-white rounded-full overflow-hidden shadow-inner focus-within:ring-2 focus-within:ring-brand-purple transition">
-                    <div class="border-r border-gray-200 flex items-center bg-gray-50 px-3 cursor-pointer text-gray-500 text-sm">
-                        <i class="fa-solid fa-location-dot mr-1 text-red-500"></i> Toda Colombia
+            <!-- Buscador -->
+            <div class="flex-grow max-w-xl hidden md:flex">
+                <div class="flex w-full bg-white rounded-full overflow-hidden shadow focus-within:ring-2 focus-within:ring-brand-purple">
+                    <div class="pl-4 pr-2 py-2 bg-gray-50 border-r border-gray-200 flex items-center">
+                        <i class="fa-solid fa-location-dot text-red-500 mr-2"></i>
+                        <select class="bg-transparent text-gray-600 text-sm outline-none font-medium">
+                            <option>Toda Colombia</option>
+                            <option>Bogotá</option>
+                            <option>Medellín</option>
+                            <option>Cartagena</option>
+                        </select>
                     </div>
-                    <input type="text" placeholder="Ej. Motos, Tecnología, Ropa..." class="w-full px-6 py-3 text-gray-800 outline-none">
-                    <button class="bg-brand-purple hover:bg-purple-700 text-white px-8 font-bold transition" onclick="renderCatalog()">
-                        Buscar
-                    </button>
+                    <input type="text" placeholder="Ej. Motos, Tecnología, Ropa..." class="w-full px-4 py-2 text-gray-800 outline-none">
+                    <button class="bg-brand-purple hover:bg-purple-600 text-white px-6 font-bold transition">Buscar</button>
                 </div>
             </div>
 
-            <div class="flex items-center space-x-4 sm:space-x-6">
-                <!-- Botón de Chat -->
-                <button onclick="renderChats()" class="relative text-gray-300 hover:text-white transition" title="Mis Mensajes">
-                    <i class="fa-solid fa-comment-dots text-xl"></i>
-                </button>
-                
-                <button onclick="renderCart()" class="relative text-gray-300 hover:text-white transition">
-                    <i class="fa-solid fa-cart-shopping text-xl"></i>
-                    <span id="cart-count" class="absolute -top-2 -right-2 bg-brand-purple text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">0</span>
-                </button>
-
-                <div id="auth-buttons" class="flex gap-2"></div>
+            <!-- Botones de Usuario -->
+            <div id="nav-user-area" class="flex items-center gap-4">
+                <!-- Se inyecta con JS -->
             </div>
         </div>
 
+        <!-- Categorías -->
         <div class="border-t border-gray-800 bg-[#0B101E]">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex space-x-6 overflow-x-auto no-scrollbar text-sm font-medium text-gray-300">
-                <button class="hover:text-white flex items-center gap-2" onclick="renderCatalog('Transportes')"><i class="fa-solid fa-motorcycle"></i> Transportes</button>
-                <button class="hover:text-white flex items-center gap-2" onclick="renderCatalog('Tecnología')"><i class="fa-solid fa-laptop"></i> Tecnología</button>
-                <button class="hover:text-white flex items-center gap-2" onclick="renderCatalog('Moda')"><i class="fa-solid fa-shirt"></i> Moda</button>
-                <button class="hover:text-white text-brand-green flex items-center gap-2" onclick="renderCatalog()"><i class="fa-solid fa-fire"></i> Ofertas</button>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex gap-6 overflow-x-auto text-sm font-medium text-gray-300 whitespace-nowrap">
+                <button class="hover:text-white" onclick="render('home', 'Transportes')"><i class="fa-solid fa-motorcycle mr-1"></i> Transportes</button>
+                <button class="hover:text-white" onclick="render('home', 'Tecnología')"><i class="fa-solid fa-laptop mr-1"></i> Tecnología</button>
+                <button class="hover:text-white" onclick="render('home', 'Moda')"><i class="fa-solid fa-shirt mr-1"></i> Moda</button>
+                <button class="text-brand-green font-bold hover:text-green-400" onclick="render('home')"><i class="fa-solid fa-fire mr-1"></i> Ofertas</button>
             </div>
         </div>
     </header>
 
-    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="app-content"></main>
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="app-content">
+        <div class="text-center py-20"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-brand-purple"></i></div>
+    </main>
 
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
-    <div id="modal-container" class="fixed inset-0 bg-brand-dark/80 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity p-4"></div>
+    <!-- Modales y Alertas -->
+    <div id="modal-container" class="fixed inset-0 bg-brand-dark/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4"></div>
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[110] flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
-        // EL CORREO DEL JEFE (Solo este correo verá el panel de administrador)
-        const ADMIN_EMAIL = "oscarlewisguerrerogonzalez@gmail.com";
-
+    try {
+        // --- BASE DE DATOS (Usamos LocalStorage para que nunca falle en GitHub) ---
         let db = {
+            currentUser: JSON.parse(localStorage.getItem('cn_user')) || null,
             products: JSON.parse(localStorage.getItem('cn_products')) || [],
-            users: JSON.parse(localStorage.getItem('cn_users')) || [],
             kycRequests: JSON.parse(localStorage.getItem('cn_kyc')) || [],
-            chats: JSON.parse(localStorage.getItem('cn_chats')) || [],
-            cart: JSON.parse(localStorage.getItem('cn_cart')) || [],
-            currentUser: JSON.parse(localStorage.getItem('cn_current_user')) || null
+            chats: JSON.parse(localStorage.getItem('cn_chats')) || []
         };
 
-        if(db.products.length === 0) {
+        const adminEmail = "oscarlewisguerrerogonzalez@gmail.com";
+
+        // Si no hay productos, creamos algunos de prueba
+        if (db.products.length === 0) {
             db.products = [
-                { id: 'p1', name: 'Moto Honda XR 150L', price: 9500000, originalPrice: 10000000, category: 'Transportes', image: 'https://placehold.co/600x600/ffffff/0d1324?text=Moto+Honda', images: [], desc: 'Perfecta para la ciudad y terreno destapado.', seller: 'Motos InveLuna', sellerEmail: 'motos@test.com', status: 'active' },
-                { id: 'p2', name: 'Suéter Hugo Boss Negro Original', price: 1000000, originalPrice: 0, category: 'Moda', image: 'https://placehold.co/400x500/ffffff/0d1324?text=Sueter+Negro', images: [], desc: 'Algodón premium, excelente estado.', seller: 'Boutique VIP', sellerEmail: 'boutique@test.com', status: 'active' }
+                { id: 'p1', name: 'Yamaha R6 Deportiva', price: 45000000, category: 'Transportes', subcategory: 'Motos', city: 'Cartagena', image: 'https://placehold.co/600x400/ef4444/ffffff?text=Yamaha+R6', desc: 'Excelente estado, lista para traspaso.', sellerEmail: 'vendedor@test.com', status: 'approved' },
+                { id: 'p2', name: 'Suéter Hugo Boss Original', price: 250000, category: 'Moda', subcategory: 'Suéteres', city: 'Bogotá', image: 'https://placehold.co/400x600/1e293b/ffffff?text=Sueter+Boss', desc: 'Algodón premium, talla M.', sellerEmail: 'moda@test.com', status: 'approved' },
+                { id: 'p3', name: 'Smart TV Samsung 65"', price: 2100000, category: 'Tecnología', subcategory: 'Televisores', city: 'Medellín', image: 'https://placehold.co/600x400/3b82f6/ffffff?text=Smart+TV', desc: 'Resolución 4K, Smart Hub.', sellerEmail: 'tech@test.com', status: 'approved' }
             ];
             saveDB();
         }
 
-        const appContent = document.getElementById('app-content');
-        const modalContainer = document.getElementById('modal-container');
-
+        // --- FUNCIONES CORE ---
         function saveDB() {
+            localStorage.setItem('cn_user', JSON.stringify(db.currentUser));
             localStorage.setItem('cn_products', JSON.stringify(db.products));
-            localStorage.setItem('cn_users', JSON.stringify(db.users));
             localStorage.setItem('cn_kyc', JSON.stringify(db.kycRequests));
             localStorage.setItem('cn_chats', JSON.stringify(db.chats));
-            localStorage.setItem('cn_cart', JSON.stringify(db.cart));
-            localStorage.setItem('cn_current_user', JSON.stringify(db.currentUser));
-            updateUI();
+            updateNavbar();
         }
 
         const formatMoney = (amount) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
 
-        window.updateUI = function() {
-            document.getElementById('cart-count').innerText = db.cart.length;
-            const authDiv = document.getElementById('auth-buttons');
-            
-            if (db.currentUser) {
-                let adminBtn = db.currentUser.email === ADMIN_EMAIL ? 
-                    `<button onclick="renderAdminPanel()" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow-lg flex items-center gap-2"><i class="fa-solid fa-shield-halved"></i> Aprobar Tiendas</button>` : '';
-
-                authDiv.innerHTML = `
-                    <button onclick="renderSellerDashboard()" class="bg-white text-brand-dark text-sm font-bold px-4 py-2 rounded-lg transition shadow hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-shop"></i> Mi Tienda</button>
-                    ${adminBtn}
-                    <button onclick="logout()" class="text-sm font-medium hover:text-gray-300 transition ml-2">Salir</button>
-                `;
-            } else {
-                authDiv.innerHTML = `
-                    <button onclick="showModal('login')" class="text-sm font-medium hover:text-gray-300 transition">Ingresar</button>
-                    <button onclick="showModal('register')" class="bg-brand-purple hover:bg-purple-600 text-sm font-medium px-4 py-2 rounded-lg transition shadow-lg">Registrarse</button>`;
-            }
-        };
-
-        window.showToast = function(message, type = 'success') {
+        function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const bg = type === 'success' ? 'bg-brand-green' : type === 'error' ? 'bg-red-500' : 'bg-brand-blue';
-            toast.className = `${bg} text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform transition-all duration-300 font-medium text-sm`;
-            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${message}</span>`;
+            toast.className = `${bg} text-white px-6 py-3 rounded-xl shadow-2xl font-bold text-sm transform transition-all duration-300 translate-y-10 opacity-0`;
+            toast.innerHTML = message;
             container.appendChild(toast);
-            setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
-        };
+            setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 10);
+            setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
 
-        // --- STREAMING_CHUNK: Vistas y Catálogo ---
-        window.renderHome = function() {
-            let html = `
-                <div class="fade-in space-y-12">
-                    <!-- Banner Promocional -->
-                    <div class="bg-gradient-to-r from-red-600 to-brand-dark rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-8 text-white border-4 border-red-500/30">
-                        <div class="w-full relative z-10 text-center">
-                            <h2 class="text-4xl md:text-6xl font-black mb-4 uppercase tracking-tight" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
-                                ¿Listo para estrenar<br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">o mejorar tu motocicleta?</span>
-                            </h2>
-                            <p class="text-gray-200 mb-8 text-lg font-medium">Vende la tuya y compra una mejor a cuotas sin tarjeta de crédito.</p>
-                            <button onclick="renderCatalog('Transportes')" class="bg-white text-red-600 hover:bg-gray-100 font-black py-4 px-10 rounded-full transition shadow-xl text-xl">Ver Motocicletas</button>
-                        </div>
-                    </div>
+        function updateNavbar() {
+            const nav = document.getElementById('nav-user-area');
+            if (db.currentUser) {
+                const isAdmin = db.currentUser.email === adminEmail;
+                let unreadChats = db.chats.filter(c => (c.buyerEmail === db.currentUser.email || c.sellerEmail === db.currentUser.email)).length;
+                
+                nav.innerHTML = `
+                    <button onclick="render('chats')" class="relative text-gray-300 hover:text-white transition" title="Mis Mensajes">
+                        <i class="fa-solid fa-comment-dots text-xl"></i>
+                        ${unreadChats > 0 ? `<span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 rounded-full">${unreadChats}</span>` : ''}
+                    </button>
+                    ${isAdmin ? `<button onclick="render('admin')" class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"><i class="fa-solid fa-shield-halved"></i> Aprobar Tiendas</button>` : ''}
+                    <button onclick="render('dashboard')" class="bg-white text-brand-dark hover:bg-gray-100 text-sm font-bold px-4 py-2 rounded-lg shadow flex items-center gap-2"><i class="fa-solid fa-store"></i> Mi Tienda</button>
+                    <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm ml-2">Salir</button>
+                `;
+            } else {
+                nav.innerHTML = `<button onclick="showLogin()" class="bg-brand-purple hover:bg-purple-600 text-white text-sm font-bold px-6 py-2 rounded-full shadow-lg">Ingresar / Registro</button>`;
+            }
+        }
 
-                    <div>
-                        <h3 class="text-2xl font-bold mb-6">Últimas Publicaciones</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                            ${db.products.map(p => `
-                                <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col cursor-pointer overflow-hidden group" onclick="renderProductDetail('${p.id}')">
-                                    <div class="h-56 bg-gray-50 overflow-hidden relative p-4 flex items-center justify-center">
-                                        <img src="${p.image}" class="max-w-full max-h-full object-contain group-hover:scale-105 transition duration-500">
-                                    </div>
-                                    <div class="p-5">
-                                        <p class="text-xs text-brand-blue font-bold mb-1 uppercase">${p.category}</p>
-                                        <h4 class="font-semibold text-gray-800 leading-tight mb-2 line-clamp-2">${p.name}</h4>
-                                        <p class="text-xl font-black text-brand-dark">${formatMoney(p.price)}</p>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-            appContent.innerHTML = html;
-        };
-
-        window.renderCatalog = function(category = null) {
-            let filtered = category ? db.products.filter(p => p.category === category) : db.products;
+        // --- STREAMING_CHUNK: Enrutador de Vistas ---
+        window.render = function(view, param = null) {
+            const content = document.getElementById('app-content');
+            content.innerHTML = '<div class="text-center py-20"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-brand-purple"></i></div>';
             
-            appContent.innerHTML = `
-                <div class="fade-in">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-3xl font-bold">Catálogo <span class="text-brand-purple">${category ? `- ${category}` : ''}</span></h2>
-                        <button onclick="renderHome()" class="text-brand-blue font-bold"><i class="fa-solid fa-arrow-left"></i> Volver</button>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                        ${filtered.length === 0 ? '<p class="col-span-full text-center py-10 text-gray-500">No hay productos aquí.</p>' : filtered.map(p => `
-                            <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col cursor-pointer overflow-hidden group" onclick="renderProductDetail('${p.id}')">
-                                <div class="h-56 bg-gray-50 relative p-4 flex items-center justify-center">
-                                    <img src="${p.image}" class="max-w-full max-h-full object-contain">
-                                </div>
-                                <div class="p-5">
-                                    <h4 class="font-semibold text-gray-800 leading-tight mb-2">${p.name}</h4>
-                                    <p class="text-xl font-black text-brand-dark">${formatMoney(p.price)}</p>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
+            setTimeout(() => {
+                try {
+                    if (view === 'home') renderHome(content, param);
+                    else if (view === 'product') renderProduct(content, param);
+                    else if (view === 'dashboard') renderDashboard(content);
+                    else if (view === 'admin') renderAdmin(content);
+                    else if (view === 'chats') renderChats(content);
+                    else if (view === 'chatRoom') renderChatRoom(content, param);
+                } catch (error) {
+                    console.error(error);
+                    content.innerHTML = `<div class="bg-red-50 p-6 rounded-xl border border-red-200 text-center"><h2 class="text-red-600 font-bold text-xl mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Error al cargar la vista</h2><p class="text-gray-700">${error.message}</p><button onclick="render('home')" class="mt-4 bg-brand-dark text-white px-4 py-2 rounded-lg">Volver al inicio</button></div>`;
+                }
+            }, 100);
         };
 
-        // --- STREAMING_CHUNK: Detalle de Producto con Simulador y Chat ---
-        window.renderProductDetail = function(id) {
-            const p = db.products.find(x => x.id === id);
-            if(!p) return;
-
-            let galeriaHtml = '';
-            if(p.images && p.images.length > 0) {
-                galeriaHtml = p.images.map(img => `<img src="${img}" class="w-16 h-16 object-cover border border-gray-200 rounded-lg cursor-pointer hover:border-brand-purple" onclick="document.getElementById('main-img-${p.id}').src='${img}'">`).join('');
+        // --- STREAMING_CHUNK: Vista Principal (Catálogo y Banner) ---
+        function renderHome(container, categoryFilter) {
+            let productsToShow = db.products.filter(p => p.status === 'approved');
+            if (categoryFilter) {
+                productsToShow = productsToShow.filter(p => p.category === categoryFilter);
             }
 
-            appContent.innerHTML = `
-                <div class="fade-in bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-10">
-                    <div class="w-full md:w-1/2">
-                        <button onclick="renderHome()" class="mb-4 text-gray-500 hover:text-brand-dark font-medium text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+            let html = `<div class="fade-in space-y-10">`;
+
+            // BANNER ESPECTACULAR DE MOTOS (Siempre visible al inicio)
+            if (!categoryFilter || categoryFilter === 'Transportes') {
+                html += `
+                    <div class="bg-brand-dark rounded-3xl overflow-hidden shadow-2xl relative border-2 border-brand-dark">
+                        <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent z-10"></div>
+                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=2070&auto=format&fit=crop" class="w-full h-80 object-cover absolute inset-0 opacity-60">
                         
-                        <!-- EL SECRETO AQUÍ: bg-gray-50 y object-contain para que el suéter se vea completo -->
-                        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 flex items-center justify-center min-h-[400px]">
-                            <img id="main-img-${p.id}" src="${p.image}" class="max-w-full max-h-[400px] object-contain rounded-xl mix-blend-multiply">
+                        <div class="relative z-20 p-10 md:p-16 flex flex-col justify-center h-full max-w-2xl text-white">
+                            <span class="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider w-max mb-4">Zona Motor</span>
+                            <h2 class="text-4xl md:text-5xl font-black mb-4 leading-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+                                ¿Listo para estrenar o mejorar tu motocicleta?
+                            </h2>
+                            <p class="text-gray-300 text-lg mb-8">Encuentra las mejores marcas, repuestos y accesorios. Todo a cuotas y sin complicaciones.</p>
+                            <button onclick="render('home', 'Transportes')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-red-600/30 w-max transition transform hover:-translate-y-1">Ver Catálogo de Motos</button>
                         </div>
-                        
-                        <div class="flex gap-2 mt-4 overflow-x-auto p-1">
-                            <img src="${p.image}" class="w-16 h-16 object-cover border border-brand-purple rounded-lg cursor-pointer" onclick="document.getElementById('main-img-${p.id}').src='${p.image}'">
-                            ${galeriaHtml}
+                    </div>
+                `;
+            }
+
+            // GRID DE PRODUCTOS
+            html += `
+                <div>
+                    <h3 class="text-2xl font-bold mb-6 text-brand-dark">${categoryFilter ? `Resultados en: ${categoryFilter}` : 'Novedades y Ofertas'}</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            `;
+
+            if (productsToShow.length === 0) {
+                html += `<div class="col-span-full text-center py-10 bg-white rounded-2xl border border-dashed border-gray-300 text-gray-500">No hay productos en esta categoría aún.</div>`;
+            } else {
+                productsToShow.forEach(p => {
+                    html += `
+                        <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition duration-300 border border-gray-100 flex flex-col cursor-pointer overflow-hidden" onclick="render('product', '${p.id}')">
+                            <div class="h-56 bg-gray-50 p-4 relative flex items-center justify-center">
+                                <span class="absolute top-3 left-3 bg-white/90 backdrop-blur text-brand-dark text-[10px] font-bold px-2 py-1 rounded shadow-sm">${p.subcategory || p.category}</span>
+                                <!-- object-contain hace que la imagen no se corte -->
+                                <img src="${p.image}" class="w-full h-full object-contain hover:scale-105 transition duration-500" alt="${p.name}">
+                            </div>
+                            <div class="p-5 flex-grow flex flex-col justify-between border-t border-gray-50">
+                                <div>
+                                    <h4 class="font-bold text-gray-800 leading-tight mb-2 line-clamp-2">${p.name}</h4>
+                                    <p class="text-xs text-gray-500 mb-3"><i class="fa-solid fa-location-dot"></i> ${p.city}</p>
+                                </div>
+                                <div>
+                                    <p class="text-2xl font-black text-brand-dark">${formatMoney(p.price)}</p>
+                                    <p class="text-xs text-brand-purple font-bold mt-1 bg-purple-50 inline-block px-2 py-1 rounded">Llévalo a cuotas</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `</div></div></div>`;
+            container.innerHTML = html;
+        }
+
+        // --- STREAMING_CHUNK: Vista de Producto (Con Simulador y Chat) ---
+        function renderProduct(container, productId) {
+            const p = db.products.find(x => x.id === productId);
+            if (!p) return render('home');
+
+            container.innerHTML = `
+                <div class="fade-in bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-10 relative">
+                    
+                    <button onclick="render('home')" class="absolute top-6 left-6 text-gray-400 hover:text-brand-dark font-bold text-sm bg-gray-100 px-3 py-1 rounded-lg"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+
+                    <!-- Imagen sin recortar (object-contain) -->
+                    <div class="w-full md:w-1/2 pt-10">
+                        <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100 h-[500px] flex items-center justify-center">
+                            <img src="${p.image}" class="max-w-full max-h-full object-contain drop-shadow-xl" alt="${p.name}">
                         </div>
                     </div>
                     
-                    <div class="w-full md:w-1/2 flex flex-col justify-center">
-                        <span class="bg-brand-bg text-brand-blue text-xs font-bold px-3 py-1 rounded-full self-start mb-3 uppercase tracking-wider">${p.category}</span>
-                        <h1 class="text-3xl md:text-4xl font-bold text-brand-dark mb-4">${p.name}</h1>
-                        <p class="text-4xl font-black text-brand-dark mb-6">${formatMoney(p.price)}</p>
-
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
-                            <p class="font-bold text-sm text-gray-700 mb-1"><i class="fa-solid fa-circle-info text-brand-blue"></i> Descripción del vendedor</p>
-                            <p class="text-gray-600 text-sm">${p.desc}</p>
+                    <!-- Información y Simulador -->
+                    <div class="w-full md:w-1/2 flex flex-col justify-center pt-10 md:pt-0">
+                        <div class="flex gap-2 mb-3">
+                            <span class="bg-brand-bg text-brand-blue text-xs font-bold px-3 py-1 rounded-full uppercase">${p.category}</span>
+                            <span class="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full uppercase"><i class="fa-solid fa-location-dot text-red-500"></i> ${p.city}</span>
+                        </div>
+                        
+                        <h1 class="text-3xl md:text-4xl font-black text-brand-dark mb-4">${p.name}</h1>
+                        <p class="text-gray-500 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 leading-relaxed text-sm">${p.desc}</p>
+                        
+                        <div class="mb-8 border-b border-gray-100 pb-6">
+                            <p class="text-sm text-gray-500 font-bold mb-1">Precio de Contado:</p>
+                            <p class="text-4xl md:text-5xl font-black text-brand-dark">${formatMoney(p.price)}</p>
                         </div>
 
                         <!-- SIMULADOR DE CUOTAS INTELIGENTE -->
-                        <div class="bg-blue-50/50 rounded-2xl p-5 border border-blue-100 mb-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h4 class="font-bold text-brand-dark text-sm"><i class="fa-solid fa-calculator text-brand-blue"></i> Simulador de Cuotas</h4>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-[#F8FAFC] rounded-2xl p-6 border border-blue-100 mb-8 relative">
+                            <div class="absolute -top-3 left-6 bg-brand-purple text-white text-[10px] font-bold px-3 py-1 rounded shadow uppercase tracking-wider"><i class="fa-solid fa-calculator"></i> Simulador de Crédito</div>
+                            
+                            <div class="grid grid-cols-2 gap-4 mt-2">
                                 <div>
                                     <label class="text-xs font-bold text-gray-500">Cuota Inicial ($)</label>
-                                    <input type="number" id="sim-inicial" value="${Math.floor(p.price * 0.2)}" class="w-full border border-gray-200 rounded p-2 text-sm mt-1 outline-none" oninput="calcularCuota(${p.price})">
+                                    <input type="number" id="sim-inicial" value="${Math.floor(p.price * 0.2)}" class="w-full border border-gray-300 rounded-lg p-2 outline-none font-bold text-brand-dark mt-1" oninput="calcularCuota(${p.price})">
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-gray-500">Meses</label>
-                                    <select id="sim-meses" class="w-full border border-gray-200 rounded p-2 text-sm mt-1 outline-none bg-white" onchange="calcularCuota(${p.price})">
-                                        <option value="6">6 meses</option>
-                                        <option value="12" selected>12 meses</option>
-                                        <option value="24">24 meses</option>
+                                    <label class="text-xs font-bold text-gray-500">Plazo</label>
+                                    <select id="sim-meses" class="w-full border border-gray-300 rounded-lg p-2 outline-none font-bold text-brand-dark mt-1" onchange="calcularCuota(${p.price})">
+                                        <option value="6">6 Meses</option>
+                                        <option value="12" selected>12 Meses</option>
+                                        <option value="24">24 Meses</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="flex justify-between items-center border-t border-blue-100 pt-3">
-                                <span class="text-sm font-medium text-gray-600">Cuota mensual estimada:</span>
-                                <span class="text-2xl font-black text-brand-blue" id="sim-resultado">Calculando...</span>
+                            
+                            <div class="mt-4 bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center">
+                                <span class="font-bold text-gray-600 text-sm">Tu cuota mensual será aprox:</span>
+                                <span id="sim-resultado" class="text-2xl font-black text-brand-blue">${formatMoney((p.price - Math.floor(p.price * 0.2)) / 12)}</span>
                             </div>
                         </div>
 
-                        <!-- SISTEMA DE CHAT PRIVADO INTEGRADO (En vez de WhatsApp) -->
+                        <!-- Botones de Acción (Chat Privado en lugar de WhatsApp) -->
                         <div class="flex gap-4">
-                            <button class="w-[80%] bg-brand-green hover:bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg" onclick="openInternalChat('${p.sellerEmail}', '${p.id}', '${p.name}')">
-                                <i class="fa-solid fa-comment-dots text-2xl"></i> Chat Privado
+                            <button onclick="iniciarChat('${p.id}', '${p.sellerEmail}', '${p.name}')" class="flex-grow bg-brand-dark hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg">
+                                <i class="fa-solid fa-comment-dots text-xl"></i> Chat Privado
                             </button>
-                            <button class="w-[20%] bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl flex items-center justify-center transition" onclick="showToast('Enlace copiado al portapapeles', 'success')">
+                            <button onclick="showToast('Enlace copiado al portapapeles')" class="w-16 bg-gray-100 hover:bg-gray-200 text-brand-dark font-bold rounded-xl flex items-center justify-center transition" title="Compartir">
                                 <i class="fa-solid fa-share-nodes text-xl"></i>
                             </button>
                         </div>
+                        
+                        <div class="mt-4 text-center">
+                            <p class="text-xs text-gray-400 font-bold"><i class="fa-solid fa-shield-check text-brand-green"></i> Vendedor Verificado por CrediNova (KYC)</p>
+                        </div>
                     </div>
                 </div>
             `;
-            // Ejecutar el cálculo por primera vez
-            calcularCuota(p.price);
-        };
+        }
 
         window.calcularCuota = function(precioTotal) {
             const inicial = parseInt(document.getElementById('sim-inicial').value) || 0;
-            const meses = parseInt(document.getElementById('sim-meses').value) || 12;
-            const saldo = precioTotal - inicial;
-            
-            if(saldo <= 0) { document.getElementById('sim-resultado').innerText = "$0"; return; }
-            
-            // Simulación básica de intereses del 2% mensual
-            const tasa = 0.02;
-            const cuota = (saldo * tasa) / (1 - Math.pow(1 + tasa, -meses));
+            const meses = parseInt(document.getElementById('sim-meses').value) || 1;
+            let saldo = precioTotal - inicial;
+            if (saldo <= 0) saldo = 0;
+            const cuota = saldo / meses;
             document.getElementById('sim-resultado').innerText = formatMoney(cuota);
-        };
+        }
 
-        // --- STREAMING_CHUNK: Sistema de Chat Interno ---
-        window.openInternalChat = function(sellerEmail, productId, productName) {
-            if(!db.currentUser) return showModal('login');
-            if(db.currentUser.email === sellerEmail) return showToast('Este es tu propio producto', 'info');
+        // --- STREAMING_CHUNK: Sistema de Chat Privado ---
+        window.iniciarChat = function(productId, sellerEmail, productName) {
+            if (!db.currentUser) return showLogin();
+            if (db.currentUser.email === sellerEmail) return showToast('Este es tu propio producto', 'error');
 
-            let chatId = db.currentUser.email + '_' + sellerEmail + '_' + productId;
-            let existingChat = db.chats.find(c => c.id === chatId);
+            // Crear ID único para esta conversación
+            const chatId = db.currentUser.email + '_' + sellerEmail + '_' + productId;
             
-            if(!existingChat) {
-                existingChat = { id: chatId, buyerEmail: db.currentUser.email, sellerEmail: sellerEmail, productName: productName, messages: [] };
-                db.chats.push(existingChat);
+            // Buscar si ya existe
+            let chat = db.chats.find(c => c.id === chatId);
+            
+            // Si no existe, crearlo
+            if (!chat) {
+                chat = {
+                    id: chatId,
+                    buyerEmail: db.currentUser.email,
+                    sellerEmail: sellerEmail,
+                    productId: productId,
+                    productName: productName,
+                    messages: []
+                };
+                db.chats.push(chat);
                 saveDB();
             }
-            renderChatRoom(chatId);
+            
+            // Abrir sala de chat
+            render('chatRoom', chatId);
         };
 
-        window.renderChats = function() {
-            if(!db.currentUser) return showModal('login');
+        function renderChats(container) {
+            if (!db.currentUser) return render('home');
             
-            const myChats = db.chats.filter(c => c.buyerEmail === db.currentUser.email || c.sellerEmail === db.currentUser.email);
-            
-            if(myChats.length === 0) {
-                appContent.innerHTML = `<div class="text-center py-20 fade-in"><i class="fa-solid fa-comments text-6xl text-gray-200 mb-4"></i><h2 class="text-2xl font-bold text-gray-500">No tienes mensajes</h2></div>`;
-                return;
+            const misChats = db.chats.filter(c => c.buyerEmail === db.currentUser.email || c.sellerEmail === db.currentUser.email);
+
+            let html = `<div class="fade-in max-w-4xl mx-auto"><h2 class="text-3xl font-bold mb-8 text-brand-dark"><i class="fa-solid fa-comments text-brand-purple"></i> Mis Mensajes</h2><div class="space-y-4">`;
+
+            if (misChats.length === 0) {
+                html += `<div class="bg-white p-10 rounded-2xl text-center shadow-sm border border-gray-100 text-gray-500">No tienes conversaciones activas.</div>`;
+            } else {
+                misChats.forEach(chat => {
+                    const otroUsuario = chat.buyerEmail === db.currentUser.email ? chat.sellerEmail : chat.buyerEmail;
+                    const ultimoMsj = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].text : 'Sin mensajes aún';
+                    
+                    html += `
+                        <div onclick="render('chatRoom', '${chat.id}')" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-brand-purple cursor-pointer transition flex items-center gap-4">
+                            <div class="w-12 h-12 bg-brand-bg rounded-full flex items-center justify-center text-brand-purple font-bold"><i class="fa-solid fa-user"></i></div>
+                            <div class="flex-grow">
+                                <h4 class="font-bold text-gray-800">${chat.productName}</h4>
+                                <p class="text-xs text-gray-400 mb-1">Con: ${otroUsuario}</p>
+                                <p class="text-sm text-gray-600 truncate">${ultimoMsj}</p>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                        </div>
+                    `;
+                });
             }
 
-            appContent.innerHTML = `
-                <div class="fade-in max-w-3xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-                    <h2 class="text-2xl font-bold mb-6 border-b pb-4">Mis Conversaciones</h2>
-                    <div class="divide-y divide-gray-100">
-                        ${myChats.map(c => {
-                            const otherPerson = c.buyerEmail === db.currentUser.email ? c.sellerEmail : c.buyerEmail;
-                            const lastMsg = c.messages.length > 0 ? c.messages[c.messages.length-1].text : 'Comenzar chat...';
-                            return `
-                                <div class="py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 px-2 rounded-lg" onclick="renderChatRoom('${c.id}')">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 bg-brand-purple text-white rounded-full flex items-center justify-center font-bold">${otherPerson.charAt(0).toUpperCase()}</div>
-                                        <div>
-                                            <p class="font-bold text-gray-800">${otherPerson}</p>
-                                            <p class="text-xs text-brand-blue font-medium mb-1">Prod: ${c.productName}</p>
-                                            <p class="text-sm text-gray-500 truncate w-48">${lastMsg}</p>
-                                        </div>
-                                    </div>
-                                    <i class="fa-solid fa-chevron-right text-gray-300"></i>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-            `;
-        };
+            html += `</div></div>`;
+            container.innerHTML = html;
+        }
 
-        window.renderChatRoom = function(chatId) {
+        function renderChatRoom(container, chatId) {
             const chat = db.chats.find(c => c.id === chatId);
-            if(!chat) return;
+            if (!chat) return render('chats');
 
-            appContent.innerHTML = `
-                <div class="fade-in max-w-2xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[600px]">
-                    <!-- Cabecera del chat -->
-                    <div class="bg-brand-dark text-white p-4 flex items-center gap-4">
-                        <button onclick="renderChats()" class="text-gray-300 hover:text-white"><i class="fa-solid fa-arrow-left"></i></button>
+            const otroUsuario = chat.buyerEmail === db.currentUser.email ? chat.sellerEmail : chat.buyerEmail;
+
+            let html = `
+                <div class="fade-in max-w-3xl mx-auto bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-[600px]">
+                    <!-- Header Chat -->
+                    <div class="bg-brand-dark p-4 flex items-center gap-4 text-white">
+                        <button onclick="render('chats')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i></button>
                         <div>
-                            <h3 class="font-bold leading-tight">${chat.productName}</h3>
-                            <p class="text-xs text-gray-400">Chat privado y seguro</p>
+                            <h3 class="font-bold text-lg leading-tight">${chat.productName}</h3>
+                            <p class="text-xs text-gray-400"><i class="fa-solid fa-circle text-brand-green text-[8px]"></i> Chateando con ${otroUsuario}</p>
                         </div>
                     </div>
                     
-                    <!-- Mensajes -->
-                    <div class="flex-grow p-4 overflow-y-auto bg-gray-50 space-y-4" id="chat-box">
-                        ${chat.messages.length === 0 ? '<p class="text-center text-xs text-gray-400 mt-10">Envía el primer mensaje para consultar sobre el producto.</p>' : ''}
+                    <!-- Área de Mensajes -->
+                    <div class="flex-grow p-6 bg-gray-50 overflow-y-auto flex flex-col gap-4" id="chat-messages-area">
                         ${chat.messages.map(m => `
-                            <div class="flex ${m.sender === db.currentUser.email ? 'justify-end' : 'justify-start'}">
-                                <div class="max-w-[70%] rounded-2xl px-4 py-2 ${m.sender === db.currentUser.email ? 'bg-brand-purple text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'}">
-                                    <p class="text-sm">${m.text}</p>
-                                </div>
+                            <div class="max-w-[80%] p-3 rounded-2xl text-sm ${m.sender === db.currentUser.email ? 'bg-brand-purple text-white self-end rounded-br-sm' : 'bg-white border border-gray-200 text-gray-800 self-start rounded-bl-sm'}">
+                                ${m.text}
                             </div>
                         `).join('')}
                     </div>
                     
                     <!-- Input -->
-                    <div class="p-4 bg-white border-t border-gray-100 flex gap-2">
-                        <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." class="flex-grow border border-gray-300 rounded-full px-4 outline-none focus:border-brand-purple" onkeypress="if(event.key === 'Enter') sendMessage('${chat.id}')">
-                        <button onclick="sendMessage('${chat.id}')" class="bg-brand-purple text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-purple-600 transition"><i class="fa-solid fa-paper-plane text-sm"></i></button>
-                    </div>
+                    <form onsubmit="enviarMensaje(event, '${chat.id}')" class="p-4 bg-white border-t border-gray-100 flex gap-2">
+                        <input type="text" id="chat-input" required placeholder="Escribe un mensaje..." class="flex-grow bg-gray-100 border-none rounded-full px-6 py-3 outline-none focus:ring-2 focus:ring-brand-purple">
+                        <button type="submit" class="w-12 h-12 bg-brand-purple text-white rounded-full flex items-center justify-center hover:bg-purple-600 transition shadow"><i class="fa-solid fa-paper-plane"></i></button>
+                    </form>
                 </div>
             `;
-            // Scroll al fondo
-            const box = document.getElementById('chat-box');
-            box.scrollTop = box.scrollHeight;
-        };
+            container.innerHTML = html;
+            
+            // Bajar el scroll al final
+            setTimeout(() => {
+                const area = document.getElementById('chat-messages-area');
+                if(area) area.scrollTop = area.scrollHeight;
+            }, 50);
+        }
 
-        window.sendMessage = function(chatId) {
+        window.enviarMensaje = function(e, chatId) {
+            e.preventDefault();
             const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if(!text) return;
+            const texto = input.value.trim();
+            if (!texto) return;
 
             const chat = db.chats.find(c => c.id === chatId);
-            chat.messages.push({ sender: db.currentUser.email, text: text, time: Date.now() });
-            saveDB();
-            renderChatRoom(chatId);
-        };
+            if (chat) {
+                chat.messages.push({ sender: db.currentUser.email, text: texto, time: Date.now() });
+                saveDB();
+                renderChatRoom(document.getElementById('app-content'), chatId); // Recargar
+            }
+        }
 
+        // --- STREAMING_CHUNK: Panel del Vendedor y KYC ---
+        function renderDashboard(container) {
+            if (!db.currentUser) return showLogin();
 
-        // --- STREAMING_CHUNK: Panel Vendedor y KYC Legal ---
-        window.renderSellerDashboard = function() {
-            if(!db.currentUser) return showModal('login');
+            // Verificar si el usuario ya mandó papeles KYC
+            const kycStatus = db.kycRequests.find(k => k.email === db.currentUser.email);
             
-            // VERIFICACIÓN KYC (Conoce a tu cliente)
-            const kycStatus = db.kycRequests.find(req => req.email === db.currentUser.email);
-
-            if(!kycStatus || kycStatus.status === 'rejected') {
-                appContent.innerHTML = `
-                    <div class="fade-in max-w-2xl mx-auto bg-white rounded-3xl p-10 shadow-sm border border-gray-100">
+            if (!kycStatus) {
+                // Mostrar formulario KYC
+                container.innerHTML = `
+                    <div class="fade-in max-w-3xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
                         <div class="text-center mb-8">
                             <i class="fa-solid fa-shield-halved text-5xl text-brand-purple mb-4"></i>
-                            <h2 class="text-2xl font-bold mb-2">Verificación de Identidad Obligatoria</h2>
-                            <p class="text-gray-500 text-sm">Por tu seguridad y la de los compradores, requerimos verificar tu identidad antes de permitirte publicar productos.</p>
+                            <h2 class="text-3xl font-black text-brand-dark mb-2">Verificación de Seguridad</h2>
+                            <p class="text-gray-500">Para proteger a los compradores, necesitamos validar tu identidad antes de permitirte vender.</p>
                         </div>
                         
-                        <form onsubmit="submitKYC(event)" class="space-y-6">
-                            <div>
-                                <label class="font-bold text-sm block mb-2">¿Qué tipo de vendedor eres?</label>
-                                <select id="kyc-type" class="w-full border p-3 rounded-xl bg-gray-50 outline-none" onchange="toggleKYCFields()">
-                                    <option value="persona">Persona Natural</option>
-                                    <option value="empresa">Empresa / Tienda Registrada</option>
-                                </select>
-                            </div>
-                            
-                            <!-- Campos Persona -->
-                            <div id="fields-persona" class="space-y-4">
-                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                    <p class="text-sm font-bold text-brand-blue mb-2"><i class="fa-solid fa-camera"></i> Foto de tu Cédula (Frente)</p>
-                                    <input type="file" id="kyc-id-front" accept="image/*" required class="text-sm w-full">
+                        <form onsubmit="enviarKYC(event)" class="space-y-6">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Tipo de Vendedor</label>
+                                    <select class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none" required>
+                                        <option value="persona">Persona Natural</option>
+                                        <option value="empresa">Empresa / Tienda Legal</option>
+                                    </select>
                                 </div>
-                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                    <p class="text-sm font-bold text-brand-blue mb-2"><i class="fa-solid fa-user"></i> Selfie de seguridad sosteniendo tu cédula</p>
-                                    <input type="file" id="kyc-selfie" accept="image/*" required class="text-sm w-full">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Número de Documento (Cédula/NIT)</label>
+                                    <input type="text" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none">
                                 </div>
                             </div>
                             
-                            <!-- Campos Empresa (Ocultos por defecto) -->
-                            <div id="fields-empresa" class="space-y-4 hidden">
-                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                    <p class="text-sm font-bold text-brand-blue mb-2"><i class="fa-solid fa-file-invoice"></i> Certificado RUT (Imagen o PDF)</p>
-                                    <input type="file" id="kyc-rut" accept="image/*,application/pdf" class="text-sm w-full">
-                                </div>
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                <h4 class="font-bold text-brand-blue mb-2"><i class="fa-solid fa-camera"></i> Subir Documentos</h4>
+                                <p class="text-xs text-gray-600 mb-4">Sube una foto de tu cédula y una selfie tuya sosteniendo un papel con el código: <strong class="text-black bg-white px-2 py-1 rounded">CRN-982</strong></p>
+                                <input type="file" required accept="image/*" class="text-sm w-full bg-white p-2 rounded border border-blue-200" title="Foto Cédula">
+                                <input type="file" required accept="image/*" class="text-sm w-full bg-white p-2 rounded border border-blue-200 mt-2" title="Selfie de Seguridad">
                             </div>
 
-                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs text-gray-600">
-                                <label class="flex items-start gap-2 cursor-pointer">
-                                    <input type="checkbox" required class="mt-1">
-                                    <span><strong>Acuerdo Legal (Ley 1581 de 2012):</strong> Autorizo a CrediNova S.A.S. al tratamiento de mis datos personales y biométricos para fines de validación de identidad, prevención de fraudes y estudio de riesgo. Declaro que los documentos adjuntos son 100% reales.</span>
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs text-gray-500 text-justify">
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" required class="mt-1 w-4 h-4">
+                                    <span><strong>Acuerdo Legal (Ley 1581 de 2012):</strong> Acepto los Términos y Condiciones. Autorizo a CrediNova S.A.S. para el tratamiento de mis datos personales, validación biométrica y consulta en centrales de riesgo para fines de seguridad de la plataforma.</span>
                                 </label>
                             </div>
-                            
-                            <button type="submit" class="w-full bg-brand-dark text-white font-bold py-4 rounded-xl shadow-lg">Enviar a Revisión</button>
+
+                            <button type="submit" id="btn-kyc" class="w-full bg-brand-dark hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg transition">
+                                Enviar a Revisión de Seguridad
+                            </button>
                         </form>
                     </div>
                 `;
                 return;
             }
 
-            if(kycStatus.status === 'pending') {
-                appContent.innerHTML = `
-                    <div class="fade-in max-w-lg mx-auto bg-white rounded-3xl p-10 shadow-sm border border-gray-100 text-center">
-                        <i class="fa-solid fa-clock-rotate-left text-6xl text-yellow-400 mb-6"></i>
-                        <h2 class="text-2xl font-bold mb-2">Tus datos están en revisión</h2>
-                        <p class="text-gray-500">Nuestro equipo está validando tu identidad. Esto suele tomar menos de 24 horas. Te avisaremos cuando tu tienda sea aprobada.</p>
-                    </div>
-                `;
+            if (kycStatus.status === 'pending') {
+                container.innerHTML = `<div class="fade-in max-w-2xl mx-auto bg-white p-10 rounded-3xl text-center shadow border border-gray-100"><i class="fa-solid fa-user-clock text-6xl text-yellow-500 mb-6"></i><h2 class="text-2xl font-bold mb-2">Documentos en Revisión</h2><p class="text-gray-500">Nuestro equipo de seguridad (El Jefe) está revisando tu cédula y selfie. Esto suele tomar un par de horas. Te avisaremos cuando seas aprobado.</p></div>`;
                 return;
             }
 
-            // SI ESTÁ APROBADO: Muestra su tienda
-            const myProducts = db.products.filter(p => p.sellerEmail === db.currentUser.email);
-            appContent.innerHTML = `
+            // SI YA ESTÁ APROBADO: Muestra su tienda
+            const misProductos = db.products.filter(p => p.sellerEmail === db.currentUser.email);
+            
+            container.innerHTML = `
                 <div class="fade-in max-w-5xl mx-auto">
                     <div class="flex justify-between items-center mb-8">
-                        <h2 class="text-3xl font-bold">Mi Tienda <span class="bg-brand-green text-white text-xs px-2 py-1 rounded-full align-middle ml-2"><i class="fa-solid fa-check"></i> Verificada</span></h2>
-                        <button onclick="renderNewProductForm()" class="bg-brand-purple text-white font-bold py-2 px-6 rounded-lg shadow-lg">+ Publicar Artículo</button>
+                        <div>
+                            <h2 class="text-3xl font-black text-brand-dark">Mi Tienda Oficial</h2>
+                            <p class="text-sm text-brand-green font-bold"><i class="fa-solid fa-check-circle"></i> Vendedor Verificado</p>
+                        </div>
+                        <button onclick="alert('Función de publicar producto en construcción para prototipo')" class="bg-brand-purple text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-purple-600 transition"><i class="fa-solid fa-plus"></i> Publicar Artículo</button>
                     </div>
-                    
-                    <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                        ${myProducts.length === 0 ? '<p class="p-10 text-center text-gray-500">No tienes productos publicados. ¡Sube el primero!</p>' : ''}
+
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-6 bg-gray-50 border-b border-gray-100"><h3 class="font-bold text-gray-700">Artículos Activos (${misProductos.length})</h3></div>
+                        ${misProductos.length === 0 ? '<div class="p-10 text-center text-gray-400">Aún no has publicado nada.</div>' : ''}
                         <ul class="divide-y divide-gray-100">
-                            ${myProducts.map(p => `
-                                <li class="p-4 flex justify-between items-center hover:bg-gray-50 transition">
+                            ${misProductos.map(p => `
+                                <li class="p-4 flex items-center justify-between hover:bg-gray-50">
                                     <div class="flex items-center gap-4">
-                                        <img src="${p.image}" class="w-16 h-16 rounded-xl object-contain bg-gray-100 border border-gray-200">
-                                        <div>
-                                            <span class="font-bold text-gray-800 block">${p.name}</span>
-                                            <span class="text-sm font-medium text-brand-blue">${formatMoney(p.price)}</span>
-                                        </div>
+                                        <img src="${p.image}" class="w-16 h-16 rounded-xl object-contain bg-white border border-gray-100">
+                                        <div><p class="font-bold text-sm">${p.name}</p><p class="text-xs text-gray-400">${p.category}</p></div>
                                     </div>
-                                    <button onclick="deleteProduct('${p.id}')" class="text-red-400 hover:text-red-600 p-2"><i class="fa-solid fa-trash"></i></button>
+                                    <p class="font-black text-brand-dark">${formatMoney(p.price)}</p>
                                 </li>
                             `).join('')}
                         </ul>
                     </div>
                 </div>
             `;
-        };
+        }
 
-        window.toggleKYCFields = function() {
-            const type = document.getElementById('kyc-type').value;
-            const p = document.getElementById('fields-persona');
-            const e = document.getElementById('fields-empresa');
-            
-            if(type === 'persona') { p.classList.remove('hidden'); e.classList.add('hidden'); p.querySelectorAll('input').forEach(i=>i.required=true); e.querySelectorAll('input').forEach(i=>i.required=false); }
-            else { e.classList.remove('hidden'); p.classList.add('hidden'); e.querySelectorAll('input').forEach(i=>i.required=true); p.querySelectorAll('input').forEach(i=>i.required=false); }
-        };
-
-        window.submitKYC = async function(e) {
+        window.enviarKYC = function(e) {
             e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Escaneando...`;
+            const btn = document.getElementById('btn-kyc');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Simulando escaneo con IA...';
             btn.disabled = true;
-
-            // Simular subida y compresión de imágenes al sistema
-            const type = document.getElementById('kyc-type').value;
-            const file1 = type === 'persona' ? document.getElementById('kyc-id-front').files[0] : document.getElementById('kyc-rut').files[0];
-            const file2 = type === 'persona' ? document.getElementById('kyc-selfie').files[0] : null;
-
-            // Truco para leer los archivos locales como datos (Base64) en el prototipo
-            const toBase64 = file => new Promise((resolve, reject) => {
-                if(!file) return resolve('');
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-
-            const docImg1 = await toBase64(file1);
-            const docImg2 = await toBase64(file2);
 
             setTimeout(() => {
                 db.kycRequests.push({
                     email: db.currentUser.email,
-                    type: type,
-                    doc1: docImg1,
-                    doc2: docImg2,
                     status: 'pending',
-                    date: new Date().toLocaleDateString()
+                    date: new Date().toLocaleDateString(),
+                    fakeIdImage: 'https://placehold.co/400x250/e2e8f0/64748b?text=Cedula+Simulada',
+                    fakeSelfie: 'https://placehold.co/300x300/e2e8f0/64748b?text=Selfie+CRN-982'
                 });
                 saveDB();
-                showToast('Documentos enviados con éxito', 'success');
-                renderSellerDashboard();
-            }, 1500);
-        };
+                render('dashboard');
+                showToast('Documentos enviados con éxito al Administrador');
+            }, 2000);
+        }
 
-        // --- STREAMING_CHUNK: Panel del Jefe (Administrador KYC) ---
-        window.renderAdminPanel = function() {
-            if(!db.currentUser || db.currentUser.email !== ADMIN_EMAIL) return;
+        // --- STREAMING_CHUNK: Panel del Jefe (Aprobar KYC) ---
+        function renderAdmin(container) {
+            if (!db.currentUser || db.currentUser.email !== adminEmail) return render('home');
 
-            const pending = db.kycRequests.filter(r => r.status === 'pending');
+            const pendientes = db.kycRequests.filter(k => k.status === 'pending');
 
-            appContent.innerHTML = `
-                <div class="fade-in max-w-6xl mx-auto">
-                    <div class="bg-red-600 text-white p-6 rounded-3xl mb-8 flex items-center gap-4 shadow-xl">
-                        <i class="fa-solid fa-user-tie text-4xl"></i>
-                        <div>
-                            <h2 class="text-3xl font-black">Panel de Control (Jefe)</h2>
-                            <p class="font-medium text-red-100">Evalúa las solicitudes de nuevas tiendas.</p>
-                        </div>
-                    </div>
-
+            let html = `
+                <div class="fade-in max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-black text-brand-dark mb-2"><i class="fa-solid fa-user-tie text-red-500"></i> Panel de Control (Jefe)</h2>
+                    <p class="text-gray-500 mb-8">Aquí apruebas o rechazas a las personas que quieren vender en CrediNova.</p>
+                    
                     <div class="space-y-6">
-                        ${pending.length === 0 ? '<div class="bg-white p-10 rounded-3xl text-center text-gray-500 border border-gray-100">No hay tiendas pendientes por aprobar.</div>' : ''}
-                        
-                        ${pending.map(req => `
-                            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-6">
-                                <div class="w-full md:w-2/3">
-                                    <p class="font-bold text-lg text-brand-dark mb-1">Usuario: ${req.email}</p>
-                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider mb-4 inline-block">${req.type}</span>
-                                    
-                                    <div class="flex gap-4 overflow-x-auto p-2 bg-gray-50 rounded-xl border border-gray-100 mt-2">
-                                        <!-- Miniaturas clickeables para abrir en grande -->
-                                        ${req.doc1 ? `<img src="${req.doc1}" class="h-32 object-contain rounded shadow cursor-pointer hover:opacity-80" onclick="window.open('${req.doc1}')" title="Clic para agrandar">` : ''}
-                                        ${req.doc2 ? `<img src="${req.doc2}" class="h-32 object-contain rounded shadow cursor-pointer hover:opacity-80" onclick="window.open('${req.doc2}')" title="Clic para agrandar">` : ''}
-                                    </div>
-                                    <p class="text-xs text-gray-400 mt-2"><i class="fa-solid fa-magnifying-glass"></i> Clic en la imagen para verla en pantalla completa y verificar los datos.</p>
-                                </div>
-                                <div class="w-full md:w-1/3 flex flex-col justify-center gap-3 border-l md:pl-6 border-gray-100">
-                                    <button onclick="resolveKYC('${req.email}', 'approved')" class="bg-brand-green hover:bg-green-600 text-white font-black py-4 rounded-xl transition shadow flex items-center justify-center gap-2 text-lg"><i class="fa-solid fa-check"></i> APROBAR</button>
-                                    <button onclick="resolveKYC('${req.email}', 'rejected')" class="bg-white border-2 border-red-500 text-red-500 hover:bg-red-50 font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"><i class="fa-solid fa-xmark"></i> Rechazar (Fotos borrosas)</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
             `;
-        };
 
-        window.resolveKYC = function(email, action) {
-            const req = db.kycRequests.find(r => r.email === email);
-            if(req) {
-                req.status = action;
-                saveDB();
-                showToast(`Tienda ${action === 'approved' ? 'Aprobada' : 'Rechazada'}.`);
-                renderAdminPanel();
+            if (pendientes.length === 0) {
+                html += `<div class="bg-green-50 text-green-700 p-6 rounded-2xl border border-green-200 text-center font-bold">No hay tiendas pendientes de aprobación. Todo está al día.</div>`;
+            } else {
+                pendientes.forEach(req => {
+                    html += `
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border-2 border-yellow-400">
+                            <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-4">
+                                <div><h3 class="font-bold text-lg">${req.email}</h3><span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded">Requiere Revisión</span></div>
+                                <div class="flex gap-2">
+                                    <button onclick="aprobarTienda('${req.email}')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition"><i class="fa-solid fa-check"></i> Aprobar</button>
+                                    <button onclick="rechazarTienda('${req.email}')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition"><i class="fa-solid fa-xmark"></i> Rechazar</button>
+                                </div>
+                            </div>
+                            
+                            <p class="text-sm font-bold text-gray-600 mb-2">Fotos enviadas por el usuario (Clic para agrandar):</p>
+                            <div class="flex gap-4">
+                                <a href="${req.fakeSelfie}" target="_blank" class="block w-1/2 bg-gray-100 rounded-xl overflow-hidden hover:opacity-80 transition"><img src="${req.fakeSelfie}" class="w-full h-40 object-cover"></a>
+                                <a href="${req.fakeIdImage}" target="_blank" class="block w-1/2 bg-gray-100 rounded-xl overflow-hidden hover:opacity-80 transition"><img src="${req.fakeIdImage}" class="w-full h-40 object-cover"></a>
+                            </div>
+                        </div>
+                    `;
+                });
             }
-        };
 
-        // --- STREAMING_CHUNK: Nuevo Producto (Galería y Compresión) ---
-        window.renderNewProductForm = function() {
-            appContent.innerHTML = `
-                <div class="fade-in max-w-3xl mx-auto bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100">
-                    <h2 class="text-2xl font-bold mb-6">Publicar Nuevo Artículo</h2>
-                    <form onsubmit="handlePublish(event)" class="space-y-5">
-                        <div>
-                            <label class="text-sm font-bold text-gray-700 block mb-1">Título del anuncio</label>
-                            <input required id="f-name" class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple" placeholder="Ej. Moto Yamaha MT09">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-sm font-bold text-gray-700 block mb-1">Precio Total (COP)</label>
-                                <input type="number" required id="f-price" class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple" placeholder="Sin puntos ni comas">
-                            </div>
-                            <div>
-                                <label class="text-sm font-bold text-gray-700 block mb-1">Categoría</label>
-                                <select id="f-cat" class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple bg-white">
-                                    <option value="Transportes">Transportes (Motos/Carros)</option>
-                                    <option value="Tecnología">Tecnología (Celulares/TV)</option>
-                                    <option value="Moda">Moda (Ropa/Accesorios)</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 border-dashed">
-                            <label class="text-sm font-bold text-brand-blue block mb-2"><i class="fa-solid fa-images"></i> Subir Fotos (Hasta 4)</label>
-                            <input type="file" id="f-images" multiple accept="image/*" class="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-purple file:text-white hover:file:bg-purple-600">
-                            <p class="text-xs text-gray-500 mt-2">Puedes seleccionar varias fotos al mismo tiempo desde tu galería.</p>
-                        </div>
+            html += `</div></div>`;
+            container.innerHTML = html;
+        }
 
-                        <div>
-                            <label class="text-sm font-bold text-gray-700 block mb-1">Descripción</label>
-                            <textarea required id="f-desc" rows="4" class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple" placeholder="Modelo, año, detalles, estado..."></textarea>
-                        </div>
-                        <button type="submit" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-4 rounded-xl shadow-lg mt-4 text-lg transition">Publicar Anuncio</button>
+        window.aprobarTienda = function(email) {
+            const req = db.kycRequests.find(k => k.email === email);
+            if (req) {
+                req.status = 'approved';
+                saveDB();
+                render('admin');
+                showToast('Vendedor Aprobado Exitosamente');
+            }
+        }
+        window.rechazarTienda = function(email) {
+            db.kycRequests = db.kycRequests.filter(k => k.email !== email);
+            saveDB();
+            render('admin');
+            showToast('Solicitud rechazada y eliminada', 'error');
+        }
+
+        // --- LOGIN BÁSICO SIMULADO ---
+        window.showLogin = function() {
+            const modal = document.getElementById('modal-container');
+            modal.innerHTML = `
+                <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative">
+                    <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    <h2 class="text-2xl font-black text-brand-dark mb-6">Ingresar</h2>
+                    <form onsubmit="hacerLogin(event)" class="space-y-4">
+                        <input type="email" id="log-email" required placeholder="Tu correo electrónico" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-brand-purple">
+                        <button type="submit" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-3 rounded-xl shadow-lg transition">Continuar</button>
                     </form>
+                    <p class="text-xs text-center text-gray-400 mt-4">Usa cualquier correo para entrar. Usa <strong class="text-black">oscarlewisguerrerogonzalez@gmail.com</strong> para entrar como Jefe.</p>
                 </div>
             `;
-        };
+            modal.classList.remove('hidden');
+        }
 
-        window.handlePublish = async function(e) {
+        window.hacerLogin = function(e) {
             e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Comprimiendo fotos...`;
-            btn.disabled = true;
+            const email = document.getElementById('log-email').value.trim();
+            db.currentUser = { email: email };
+            saveDB();
+            document.getElementById('modal-container').classList.add('hidden');
+            showToast('¡Sesión iniciada correctamente!');
+            render('home');
+        }
 
-            const files = document.getElementById('f-images').files;
-            let imageBase64Array = [];
+        window.logout = function() {
+            db.currentUser = null;
+            saveDB();
+            render('home');
+            showToast('Sesión cerrada');
+        }
 
-            // Compresor de imágenes integrado
-            const compressImage = (file) => new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800; // Calidad óptima para web
-                        const scaleSize = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7)); // 70% calidad
-                    };
-                };
-            });
+        // INICIALIZAR APP
+        updateNavbar();
+        render('home');
 
-            // Procesar todas las fotos seleccionadas (máx 4 para no saturar memoria en este prototipo)
-            const limit = Math.min(files.length, 4);
-            for(let i=0; i<limit; i++) {
-                const compressed = await compressImage(files[i]);
-                imageBase64Array.push(compressed);
-            }
-
-            const fallbackImage = 'https://placehold.co/400x400/ffffff/0d1324?text=Sin+Foto';
-
-            db.products.push({
-                id: 'PROD' + Date.now(),
-                name: document.getElementById('f-name').value,
-                price: parseInt(document.getElementById('f-price').value),
-                category: document.getElementById('f-cat').value,
-                image: imageBase64Array.length > 0 ? imageBase64Array[0] : fallbackImage,
-                images: imageBase64Array,
-                desc: document.getElementById('f-desc').value,
-                seller: db.currentUser.name,
-                sellerEmail: db.currentUser.email
-            });
-            
-            saveDB(); 
-            showToast('¡Producto publicado con éxito!');
-            renderSellerDashboard();
-        };
-
-        window.deleteProduct = function(id) {
-            if(confirm("¿Estás seguro de que quieres eliminar este anuncio?")) {
-                db.products = db.products.filter(p => p.id !== id);
-                saveDB();
-                renderSellerDashboard();
-            }
-        };
-
-        // --- STREAMING_CHUNK: Autenticación Modal ---
-        window.showModal = function(type) {
-            modalContainer.classList.remove('hidden');
-            setTimeout(() => modalContainer.classList.remove('opacity-0'), 10);
-            
-            if(type === 'login') {
-                modalContainer.innerHTML = `
-                    <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative">
-                        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
-                        <h2 class="text-2xl font-bold mb-2">Iniciar Sesión</h2>
-                        <form onsubmit="handleLogin(event)" class="space-y-4 mt-6">
-                            <input type="email" id="l-email" required placeholder="Correo electrónico" class="w-full border border-gray-300 rounded-xl p-3 outline-none">
-                            <input type="password" id="l-pass" required placeholder="Contraseña" class="w-full border border-gray-300 rounded-xl p-3 outline-none">
-                            <button type="submit" class="w-full bg-brand-dark hover:bg-black text-white font-bold py-3 rounded-xl transition">Entrar</button>
-                        </form>
-                    </div>
-                `;
-            } else if (type === 'register') {
-                modalContainer.innerHTML = `
-                    <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative">
-                        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
-                        <h2 class="text-2xl font-bold mb-2 text-brand-purple">Crear Cuenta</h2>
-                        <form onsubmit="handleRegister(event)" class="space-y-4 mt-6">
-                            <input type="text" id="r-name" required placeholder="Nombre completo o Tienda" class="w-full border border-gray-300 rounded-xl p-3 outline-none">
-                            <input type="email" id="r-email" required placeholder="Correo electrónico" class="w-full border border-gray-300 rounded-xl p-3 outline-none">
-                            <input type="password" id="r-pass" required placeholder="Crear contraseña" class="w-full border border-gray-300 rounded-xl p-3 outline-none">
-                            <button type="submit" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition shadow-lg mt-4">Registrarme</button>
-                        </form>
-                    </div>
-                `;
-            }
-        };
-
-        window.closeModal = function() {
-            modalContainer.classList.add('opacity-0');
-            setTimeout(() => { modalContainer.classList.add('hidden'); modalContainer.innerHTML=''; }, 300);
-        };
-
-        window.handleRegister = function(e) {
-            e.preventDefault();
-            const email = document.getElementById('r-email').value;
-            if(db.users.find(u => u.email === email)) return showToast('El correo ya existe', 'error');
-            
-            const newUser = { name: document.getElementById('r-name').value, email: email, pass: document.getElementById('r-pass').value };
-            db.users.push(newUser);
-            db.currentUser = newUser; 
-            saveDB(); closeModal(); showToast('¡Cuenta creada exitosamente!');
-        };
-
-        window.handleLogin = function(e) {
-            e.preventDefault();
-            const email = document.getElementById('l-email').value;
-            const pass = document.getElementById('l-pass').value;
-            const user = db.users.find(u => u.email === email && u.pass === pass);
-            
-            if(user) { db.currentUser = user; saveDB(); closeModal(); showToast('Bienvenido de vuelta'); renderHome(); } 
-            else { showToast('Credenciales incorrectas', 'error'); }
-        };
-
-        window.logout = function() { db.currentUser = null; saveDB(); renderHome(); showToast('Sesión cerrada'); };
-
-        // Iniciar
-        updateUI();
-        renderHome();
+    } catch (e) {
+        // ESCUDO ANTI-ERRORES
+        document.getElementById('app-content').innerHTML = `
+            <div class="max-w-2xl mx-auto bg-red-50 p-10 rounded-3xl text-center border-2 border-red-200 mt-20">
+                <i class="fa-solid fa-bomb text-6xl text-red-500 mb-6"></i>
+                <h2 class="text-2xl font-black text-red-700 mb-2">¡Ups! Algo se rompió en el código</h2>
+                <p class="text-red-600 mb-4">Error técnico: <strong>${e.message}</strong></p>
+                <p class="text-sm text-gray-600">Por favor, copia el código nuevamente asegurándote de no borrar ningún símbolo (como las comillas o corchetes).</p>
+            </div>
+        `;
+    }
     </script>
 </body>
 </html>
