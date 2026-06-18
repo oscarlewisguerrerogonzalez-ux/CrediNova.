@@ -1,128 +1,301 @@
-<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="es" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrediNova - Compra y Vende a Cuotas</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            dark: '#0D1324',
+                            purple: '#7C3AED',
+                            blue: '#2563EB',
+                            green: '#06D6A0',
+                            bg: '#F4F6FA',
+                            gray: '#E2E8F0'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #F4F6FA; color: #0D1324; overflow-x: hidden; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <header class="bg-brand-dark text-white sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center cursor-pointer transform transition hover:scale-105" onclick="renderHome()">
+                <div class="bg-gradient-to-br from-brand-blue to-brand-purple text-white p-2 rounded-lg mr-2 shadow-lg">
+                    <i class="fa-solid fa-bolt text-2xl font-black"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight leading-none">CrediNova</h1>
+                </div>
+            </div>
+
+            <div class="flex-grow max-w-2xl mx-4 hidden md:flex">
+                <div class="flex w-full bg-white rounded-full overflow-hidden shadow-inner focus-within:ring-2 focus-within:ring-brand-purple transition">
+                    <div class="border-r border-gray-200 flex items-center bg-gray-50 px-3 cursor-pointer text-gray-500 text-sm">
+                        <i class="fa-solid fa-location-dot mr-1 text-red-500"></i> Toda Colombia
+                    </div>
+                    <input type="text" placeholder="Ej. Motos, Tecnología, Ropa..." class="w-full px-6 py-3 text-gray-800 outline-none">
+                    <button class="bg-brand-purple hover:bg-purple-700 text-white px-8 font-bold transition" onclick="renderCatalog()">
+                        Buscar
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4 sm:space-x-6">
+                <!-- Botón de Chat -->
+                <button onclick="renderChats()" class="relative text-gray-300 hover:text-white transition" title="Mis Mensajes">
+                    <i class="fa-solid fa-comment-dots text-xl"></i>
+                </button>
+                
+                <button onclick="renderCart()" class="relative text-gray-300 hover:text-white transition">
+                    <i class="fa-solid fa-cart-shopping text-xl"></i>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-brand-purple text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">0</span>
+                </button>
+
+                <div id="auth-buttons" class="flex gap-2"></div>
+            </div>
+        </div>
+
         <div class="border-t border-gray-800 bg-[#0B101E]">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex space-x-6 overflow-x-auto no-scrollbar text-sm font-medium text-gray-300">
-                <button class="hover:text-white flex items-center gap-2" onclick="renderCatalog()"><i class="fa-solid fa-bars"></i> Categorías</button>
-                <button class="hover:text-white" onclick="renderHome()">Inicio</button>
-                <button class="hover:text-white text-brand-green" onclick="renderCatalog()"><i class="fa-solid fa-tag"></i> Ofertas</button>
-                <button class="hover:text-white" onclick="renderMyPurchases()">Mis Compras</button>
-                <button class="hover:text-white text-yellow-400 font-bold" onclick="renderChats()"><i class="fa-solid fa-comments"></i> Chat</button>
-                <button class="hover:text-white bg-white/10 px-3 py-1 rounded" onclick="renderSellerDashboard()">Mi Panel</button>
-<!-- ... existing code ... -->
-        // --- 1. BASE DE DATOS LOCAL (Simulación de Backend) ---
+                <button class="hover:text-white flex items-center gap-2" onclick="renderCatalog('Transportes')"><i class="fa-solid fa-motorcycle"></i> Transportes</button>
+                <button class="hover:text-white flex items-center gap-2" onclick="renderCatalog('Tecnología')"><i class="fa-solid fa-laptop"></i> Tecnología</button>
+                <button class="hover:text-white flex items-center gap-2" onclick="renderCatalog('Moda')"><i class="fa-solid fa-shirt"></i> Moda</button>
+                <button class="hover:text-white text-brand-green flex items-center gap-2" onclick="renderCatalog()"><i class="fa-solid fa-fire"></i> Ofertas</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="app-content"></main>
+
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <div id="modal-container" class="fixed inset-0 bg-brand-dark/80 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity p-4"></div>
+
+    <script>
+        // EL CORREO DEL JEFE (Solo este correo verá el panel de administrador)
+        const ADMIN_EMAIL = "oscarlewisguerrerogonzalez@gmail.com";
+
         let db = {
             products: JSON.parse(localStorage.getItem('cn_products')) || [],
             users: JSON.parse(localStorage.getItem('cn_users')) || [],
-            orders: JSON.parse(localStorage.getItem('cn_orders')) || [],
+            kycRequests: JSON.parse(localStorage.getItem('cn_kyc')) || [],
+            chats: JSON.parse(localStorage.getItem('cn_chats')) || [],
             cart: JSON.parse(localStorage.getItem('cn_cart')) || [],
-            kyc: JSON.parse(localStorage.getItem('cn_kyc')) || [],
-            chats: JSON.parse(localStorage.getItem('cn_chats')) || [], 
             currentUser: JSON.parse(localStorage.getItem('cn_current_user')) || null
         };
+
+        if(db.products.length === 0) {
+            db.products = [
+                { id: 'p1', name: 'Moto Honda XR 150L', price: 9500000, originalPrice: 10000000, category: 'Transportes', image: 'https://placehold.co/600x600/ffffff/0d1324?text=Moto+Honda', images: [], desc: 'Perfecta para la ciudad y terreno destapado.', seller: 'Motos InveLuna', sellerEmail: 'motos@test.com', status: 'active' },
+                { id: 'p2', name: 'Suéter Hugo Boss Negro Original', price: 1000000, originalPrice: 0, category: 'Moda', image: 'https://placehold.co/400x500/ffffff/0d1324?text=Sueter+Negro', images: [], desc: 'Algodón premium, excelente estado.', seller: 'Boutique VIP', sellerEmail: 'boutique@test.com', status: 'active' }
+            ];
+            saveDB();
+        }
 
         const appContent = document.getElementById('app-content');
         const modalContainer = document.getElementById('modal-container');
 
-        // Función para guardar cambios
         function saveDB() {
             localStorage.setItem('cn_products', JSON.stringify(db.products));
             localStorage.setItem('cn_users', JSON.stringify(db.users));
-            localStorage.setItem('cn_orders', JSON.stringify(db.orders));
+            localStorage.setItem('cn_kyc', JSON.stringify(db.kycRequests));
+            localStorage.setItem('cn_chats', JSON.stringify(db.chats));
             localStorage.setItem('cn_cart', JSON.stringify(db.cart));
-            localStorage.setItem('cn_kyc', JSON.stringify(db.kyc));
-            localStorage.setItem('cn_chats', JSON.stringify(db.chats)); 
             localStorage.setItem('cn_current_user', JSON.stringify(db.currentUser));
             updateUI();
         }
-<!-- ... existing code ... -->
+
+        const formatMoney = (amount) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
+
+        window.updateUI = function() {
+            document.getElementById('cart-count').innerText = db.cart.length;
+            const authDiv = document.getElementById('auth-buttons');
+            
+            if (db.currentUser) {
+                let adminBtn = db.currentUser.email === ADMIN_EMAIL ? 
+                    `<button onclick="renderAdminPanel()" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow-lg flex items-center gap-2"><i class="fa-solid fa-shield-halved"></i> Aprobar Tiendas</button>` : '';
+
+                authDiv.innerHTML = `
+                    <button onclick="renderSellerDashboard()" class="bg-white text-brand-dark text-sm font-bold px-4 py-2 rounded-lg transition shadow hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-shop"></i> Mi Tienda</button>
+                    ${adminBtn}
+                    <button onclick="logout()" class="text-sm font-medium hover:text-gray-300 transition ml-2">Salir</button>
+                `;
+            } else {
+                authDiv.innerHTML = `
+                    <button onclick="showModal('login')" class="text-sm font-medium hover:text-gray-300 transition">Ingresar</button>
+                    <button onclick="showModal('register')" class="bg-brand-purple hover:bg-purple-600 text-sm font-medium px-4 py-2 rounded-lg transition shadow-lg">Registrarse</button>`;
+            }
+        };
+
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bg = type === 'success' ? 'bg-brand-green' : type === 'error' ? 'bg-red-500' : 'bg-brand-blue';
+            toast.className = `${bg} text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform transition-all duration-300 font-medium text-sm`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
+        };
+
+        // --- STREAMING_CHUNK: Vistas y Catálogo ---
+        window.renderHome = function() {
+            let html = `
+                <div class="fade-in space-y-12">
+                    <!-- Banner Promocional -->
+                    <div class="bg-gradient-to-r from-red-600 to-brand-dark rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-8 text-white border-4 border-red-500/30">
+                        <div class="w-full relative z-10 text-center">
+                            <h2 class="text-4xl md:text-6xl font-black mb-4 uppercase tracking-tight" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+                                ¿Listo para estrenar<br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">o mejorar tu motocicleta?</span>
+                            </h2>
+                            <p class="text-gray-200 mb-8 text-lg font-medium">Vende la tuya y compra una mejor a cuotas sin tarjeta de crédito.</p>
+                            <button onclick="renderCatalog('Transportes')" class="bg-white text-red-600 hover:bg-gray-100 font-black py-4 px-10 rounded-full transition shadow-xl text-xl">Ver Motocicletas</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-2xl font-bold mb-6">Últimas Publicaciones</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                            ${db.products.map(p => `
+                                <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col cursor-pointer overflow-hidden group" onclick="renderProductDetail('${p.id}')">
+                                    <div class="h-56 bg-gray-50 overflow-hidden relative p-4 flex items-center justify-center">
+                                        <img src="${p.image}" class="max-w-full max-h-full object-contain group-hover:scale-105 transition duration-500">
+                                    </div>
+                                    <div class="p-5">
+                                        <p class="text-xs text-brand-blue font-bold mb-1 uppercase">${p.category}</p>
+                                        <h4 class="font-semibold text-gray-800 leading-tight mb-2 line-clamp-2">${p.name}</h4>
+                                        <p class="text-xl font-black text-brand-dark">${formatMoney(p.price)}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            appContent.innerHTML = html;
+        };
+
+        window.renderCatalog = function(category = null) {
+            let filtered = category ? db.products.filter(p => p.category === category) : db.products;
+            
+            appContent.innerHTML = `
+                <div class="fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-3xl font-bold">Catálogo <span class="text-brand-purple">${category ? `- ${category}` : ''}</span></h2>
+                        <button onclick="renderHome()" class="text-brand-blue font-bold"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                        ${filtered.length === 0 ? '<p class="col-span-full text-center py-10 text-gray-500">No hay productos aquí.</p>' : filtered.map(p => `
+                            <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col cursor-pointer overflow-hidden group" onclick="renderProductDetail('${p.id}')">
+                                <div class="h-56 bg-gray-50 relative p-4 flex items-center justify-center">
+                                    <img src="${p.image}" class="max-w-full max-h-full object-contain">
+                                </div>
+                                <div class="p-5">
+                                    <h4 class="font-semibold text-gray-800 leading-tight mb-2">${p.name}</h4>
+                                    <p class="text-xl font-black text-brand-dark">${formatMoney(p.price)}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        };
+
+        // --- STREAMING_CHUNK: Detalle de Producto con Simulador y Chat ---
         window.renderProductDetail = function(id) {
             const p = db.products.find(x => x.id === id);
             if(!p) return;
 
             let galeriaHtml = '';
             if(p.images && p.images.length > 0) {
-                galeriaHtml = p.images.map(img => `<img src="${img}" class="w-20 h-20 object-contain rounded-lg border border-gray-200 cursor-pointer hover:border-brand-purple bg-white" onclick="document.getElementById('main-product-image').src='${img}'">`).join('');
-            } else {
-                galeriaHtml = `<img src="${p.image}" class="w-20 h-20 object-contain rounded-lg border border-gray-200 bg-white">`;
+                galeriaHtml = p.images.map(img => `<img src="${img}" class="w-16 h-16 object-cover border border-gray-200 rounded-lg cursor-pointer hover:border-brand-purple" onclick="document.getElementById('main-img-${p.id}').src='${img}'">`).join('');
             }
 
             appContent.innerHTML = `
                 <div class="fade-in bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-10">
-                    <!-- Galería -->
                     <div class="w-full md:w-1/2">
-                        <button onclick="renderCatalog()" class="mb-4 text-gray-500 hover:text-brand-dark font-medium text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Volver al catálogo</button>
+                        <button onclick="renderHome()" class="mb-4 text-gray-500 hover:text-brand-dark font-medium text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Volver</button>
                         
-                        <!-- AQUI SE ARREGLÓ EL RECORTE DE LA IMAGEN (object-contain y bg-gray-50) -->
-                        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-4 flex justify-center">
-                            <img id="main-product-image" src="${p.images ? p.images[0] : p.image}" class="w-full h-[400px] object-contain rounded-xl mix-blend-multiply">
+                        <!-- EL SECRETO AQUÍ: bg-gray-50 y object-contain para que el suéter se vea completo -->
+                        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 flex items-center justify-center min-h-[400px]">
+                            <img id="main-img-${p.id}" src="${p.image}" class="max-w-full max-h-[400px] object-contain rounded-xl mix-blend-multiply">
                         </div>
-                        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                        
+                        <div class="flex gap-2 mt-4 overflow-x-auto p-1">
+                            <img src="${p.image}" class="w-16 h-16 object-cover border border-brand-purple rounded-lg cursor-pointer" onclick="document.getElementById('main-img-${p.id}').src='${p.image}'">
                             ${galeriaHtml}
                         </div>
                     </div>
                     
-                    <!-- Info -->
                     <div class="w-full md:w-1/2 flex flex-col justify-center">
-                        <div class="flex items-center gap-3 mb-3">
-                            <span class="bg-brand-bg text-brand-blue text-xs font-bold px-3 py-1 rounded-full uppercase">${p.category}</span>
-                            <span class="text-gray-400 text-sm"><i class="fa-solid fa-location-dot"></i> Envío desde ${p.city || 'Colombia'}</span>
-                        </div>
-                        
-                        <h1 class="text-3xl font-bold text-brand-dark mb-2">${p.name}</h1>
-                        
-                        <div class="mb-6">
-                            ${p.originalPrice > p.price ? `<span class="bg-brand-purple text-white text-xs font-bold px-2 py-1 rounded-md mr-2">Rebajado</span> <span class="text-sm text-gray-400 line-through">${formatMoney(p.originalPrice)}</span>` : ''}
-                            <p class="text-4xl font-black text-brand-dark mt-1">${formatMoney(p.price)}</p>
+                        <span class="bg-brand-bg text-brand-blue text-xs font-bold px-3 py-1 rounded-full self-start mb-3 uppercase tracking-wider">${p.category}</span>
+                        <h1 class="text-3xl md:text-4xl font-bold text-brand-dark mb-4">${p.name}</h1>
+                        <p class="text-4xl font-black text-brand-dark mb-6">${formatMoney(p.price)}</p>
+
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
+                            <p class="font-bold text-sm text-gray-700 mb-1"><i class="fa-solid fa-circle-info text-brand-blue"></i> Descripción del vendedor</p>
+                            <p class="text-gray-600 text-sm">${p.desc}</p>
                         </div>
 
-                        <p class="text-gray-600 text-sm mb-6 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100"><i class="fa-solid fa-circle-info text-brand-purple mr-2"></i> <strong>Descripción del vendedor</strong><br>${p.desc}</p>
-                        
-                        <!-- Simulador de Cuotas -->
-                        <div class="bg-brand-bg rounded-2xl p-5 border border-brand-purple/20 mb-8 relative">
-                            <div class="absolute -top-3 right-4 bg-brand-purple text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Aprobación Rápida</div>
-                            <h4 class="font-bold text-brand-dark mb-4 text-sm"><i class="fa-solid fa-calculator text-brand-purple"></i> Simulador de Cuotas</h4>
-                            <div class="flex gap-4 mb-4">
-                                <div class="w-1/2">
+                        <!-- SIMULADOR DE CUOTAS INTELIGENTE -->
+                        <div class="bg-blue-50/50 rounded-2xl p-5 border border-blue-100 mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-brand-dark text-sm"><i class="fa-solid fa-calculator text-brand-blue"></i> Simulador de Cuotas</h4>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
                                     <label class="text-xs font-bold text-gray-500">Cuota Inicial ($)</label>
-                                    <input type="number" id="sim-inicial" value="${Math.floor(p.price * 0.2)}" class="w-full p-2 rounded-lg border border-gray-200 mt-1 text-sm font-bold" onchange="calcularCuota(${p.price})">
+                                    <input type="number" id="sim-inicial" value="${Math.floor(p.price * 0.2)}" class="w-full border border-gray-200 rounded p-2 text-sm mt-1 outline-none" oninput="calcularCuota(${p.price})">
                                 </div>
-                                <div class="w-1/2">
+                                <div>
                                     <label class="text-xs font-bold text-gray-500">Meses</label>
-                                    <select id="sim-meses" class="w-full p-2 rounded-lg border border-gray-200 mt-1 text-sm font-bold" onchange="calcularCuota(${p.price})">
-                                        <option value="3">3 meses</option>
+                                    <select id="sim-meses" class="w-full border border-gray-200 rounded p-2 text-sm mt-1 outline-none bg-white" onchange="calcularCuota(${p.price})">
                                         <option value="6">6 meses</option>
                                         <option value="12" selected>12 meses</option>
                                         <option value="24">24 meses</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="text-right">
-                                <p class="text-xs text-brand-blue font-bold">Cuota mensual estimada:</p>
-                                <p class="text-2xl font-black text-brand-dark" id="sim-resultado">${formatMoney((p.price - Math.floor(p.price * 0.2)) / 12)}</p>
+                            <div class="flex justify-between items-center border-t border-blue-100 pt-3">
+                                <span class="text-sm font-medium text-gray-600">Cuota mensual estimada:</span>
+                                <span class="text-2xl font-black text-brand-blue" id="sim-resultado">Calculando...</span>
                             </div>
                         </div>
 
-                        <!-- Perfil Vendedor Mini -->
-                        <div class="flex items-center gap-4 mb-6 p-4 border border-gray-200 rounded-xl">
-                            <div class="w-10 h-10 bg-brand-blue/10 rounded-full flex items-center justify-center text-brand-blue font-bold text-xl"><i class="fa-solid fa-store"></i></div>
-                            <div>
-                                <p class="font-bold text-sm text-gray-800">Vendedor Verificado <i class="fa-solid fa-circle-check text-brand-green"></i></p>
-                                <p class="text-xs text-gray-500">${p.sellerEmail}</p>
-                            </div>
-                        </div>
-
-                        <!-- Botones de Acción Modificados (CHAT INTERNO) -->
+                        <!-- SISTEMA DE CHAT PRIVADO INTEGRADO (En vez de WhatsApp) -->
                         <div class="flex gap-4">
-                            <button class="w-full bg-brand-purple hover:bg-purple-700 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2" onclick="openInternalChat('${p.sellerEmail}', '${p.id}', '${p.name}')">
-                                <i class="fa-solid fa-comments"></i> Chat Privado
+                            <button class="w-[80%] bg-brand-green hover:bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg" onclick="openInternalChat('${p.sellerEmail}', '${p.id}', '${p.name}')">
+                                <i class="fa-solid fa-comment-dots text-2xl"></i> Chat Privado
                             </button>
-                            <button class="bg-brand-dark hover:bg-black text-white px-6 rounded-xl font-bold transition flex items-center justify-center gap-2" onclick="addToCart('${p.id}')">
-                                <i class="fa-solid fa-cart-shopping"></i>
+                            <button class="w-[20%] bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl flex items-center justify-center transition" onclick="showToast('Enlace copiado al portapapeles', 'success')">
+                                <i class="fa-solid fa-share-nodes text-xl"></i>
                             </button>
                         </div>
                     </div>
                 </div>
             `;
-            calcularCuota(p.price); // Inicializar
+            // Ejecutar el cálculo por primera vez
+            calcularCuota(p.price);
         };
 
         window.calcularCuota = function(precioTotal) {
@@ -130,33 +303,24 @@
             const meses = parseInt(document.getElementById('sim-meses').value) || 12;
             const saldo = precioTotal - inicial;
             
-            if(saldo <= 0) {
-                document.getElementById('sim-resultado').innerText = "$0";
-                return;
-            }
-            // Cálculo simple sin intereses complejos para el simulador
-            const cuota = saldo / meses;
+            if(saldo <= 0) { document.getElementById('sim-resultado').innerText = "$0"; return; }
+            
+            // Simulación básica de intereses del 2% mensual
+            const tasa = 0.02;
+            const cuota = (saldo * tasa) / (1 - Math.pow(1 + tasa, -meses));
             document.getElementById('sim-resultado').innerText = formatMoney(cuota);
         };
 
-        // --- STREAMING_CHUNK: SISTEMA DE CHAT PRIVADO ---
+        // --- STREAMING_CHUNK: Sistema de Chat Interno ---
         window.openInternalChat = function(sellerEmail, productId, productName) {
             if(!db.currentUser) return showModal('login');
             if(db.currentUser.email === sellerEmail) return showToast('Este es tu propio producto', 'info');
 
-            // ID único para el chat (Comprador_Vendedor_Producto)
             let chatId = db.currentUser.email + '_' + sellerEmail + '_' + productId;
             let existingChat = db.chats.find(c => c.id === chatId);
-
+            
             if(!existingChat) {
-                existingChat = {
-                    id: chatId,
-                    buyerEmail: db.currentUser.email,
-                    sellerEmail: sellerEmail,
-                    productId: productId,
-                    productName: productName,
-                    messages: []
-                };
+                existingChat = { id: chatId, buyerEmail: db.currentUser.email, sellerEmail: sellerEmail, productName: productName, messages: [] };
                 db.chats.push(existingChat);
                 saveDB();
             }
@@ -167,114 +331,457 @@
             if(!db.currentUser) return showModal('login');
             
             const myChats = db.chats.filter(c => c.buyerEmail === db.currentUser.email || c.sellerEmail === db.currentUser.email);
-
+            
             if(myChats.length === 0) {
-                appContent.innerHTML = `<div class="text-center py-32 fade-in"><i class="fa-regular fa-comments text-6xl text-gray-300 mb-4"></i><h2 class="text-2xl font-bold text-gray-700">Tu bandeja está vacía</h2><p class="text-gray-500 mt-2">Busca un producto y contacta al vendedor para iniciar un chat.</p></div>`;
+                appContent.innerHTML = `<div class="text-center py-20 fade-in"><i class="fa-solid fa-comments text-6xl text-gray-200 mb-4"></i><h2 class="text-2xl font-bold text-gray-500">No tienes mensajes</h2></div>`;
                 return;
             }
 
-            let html = `<div class="fade-in max-w-4xl mx-auto"><h2 class="text-3xl font-bold mb-8 text-brand-dark"><i class="fa-solid fa-comments text-brand-purple"></i> Mis Conversaciones</h2><div class="space-y-4">`;
-            
-            myChats.forEach(chat => {
-                const isBuyer = chat.buyerEmail === db.currentUser.email;
-                const otherPerson = isBuyer ? chat.sellerEmail : chat.buyerEmail;
-                const roleText = isBuyer ? 'Vendedor' : 'Comprador';
-                const lastMsg = chat.messages.length > 0 ? chat.messages[chat.messages.length-1].text : 'Sin mensajes aún...';
-                
-                html += `
-                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:shadow-md transition gap-4" onclick="renderChatRoom('${chat.id}')">
-                        <div class="flex items-center gap-4 w-full md:w-auto">
-                            <div class="w-14 h-14 bg-brand-bg rounded-full flex items-center justify-center text-brand-purple font-bold text-2xl"><i class="fa-solid fa-user-astronaut"></i></div>
-                            <div class="flex-grow">
-                                <h4 class="font-bold text-gray-800 text-lg">${chat.productName}</h4>
-                                <p class="text-xs text-brand-blue font-bold mb-1">${roleText}: ${otherPerson}</p>
-                                <p class="text-sm text-gray-500 truncate max-w-xs">${lastMsg}</p>
-                            </div>
-                        </div>
-                        <button class="w-full md:w-auto bg-gray-100 hover:bg-gray-200 text-brand-dark px-6 py-3 rounded-xl text-sm font-bold transition">Abrir Chat</button>
-                    </div>
-                `;
-            });
-            
-            html += `</div></div>`;
-            appContent.innerHTML = html;
-        };
-
-        window.renderChatRoom = function(chatId) {
-            if(!db.currentUser) return showModal('login');
-            const chat = db.chats.find(c => c.id === chatId);
-            if(!chat) return;
-
-            const isBuyer = chat.buyerEmail === db.currentUser.email;
-            const otherPerson = isBuyer ? chat.sellerEmail : chat.buyerEmail;
-
-            let messagesHtml = chat.messages.map(m => {
-                const isMe = m.sender === db.currentUser.email;
-                return `
-                    <div class="flex ${isMe ? 'justify-end' : 'justify-start'} mb-4">
-                        <div class="${isMe ? 'bg-brand-purple text-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl' : 'bg-gray-100 text-gray-800 rounded-tl-2xl rounded-tr-2xl rounded-br-2xl'} px-5 py-3 max-w-[80%] shadow-sm">
-                            <p class="text-sm md:text-base">${m.text}</p>
-                            <p class="text-[10px] ${isMe ? 'text-purple-200' : 'text-gray-400'} text-right mt-1">${m.time}</p>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            if(chat.messages.length === 0) {
-                messagesHtml = `<div class="flex flex-col items-center justify-center h-full text-center text-gray-400"><i class="fa-regular fa-hand-spock text-4xl mb-2"></i><p>Inicia la conversación.<br>Escribe un mensaje abajo.</p></div>`;
-            }
-
             appContent.innerHTML = `
-                <div class="fade-in max-w-4xl mx-auto h-[80vh] flex flex-col bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden">
-                    <!-- Cabecera del Chat -->
-                    <div class="bg-white border-b border-gray-100 p-4 flex items-center gap-4 shadow-sm z-10">
-                        <button onclick="renderChats()" class="text-gray-400 hover:text-brand-dark w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"><i class="fa-solid fa-arrow-left text-xl"></i></button>
-                        <div class="w-10 h-10 bg-brand-bg rounded-full flex items-center justify-center text-brand-purple"><i class="fa-solid fa-box"></i></div>
-                        <div>
-                            <h3 class="font-bold text-gray-800 leading-tight cursor-pointer hover:text-brand-purple" onclick="renderProductDetail('${chat.productId}')">${chat.productName} <i class="fa-solid fa-link text-xs"></i></h3>
-                            <p class="text-xs text-brand-green font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-green animate-pulse"></span> En línea con ${otherPerson}</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Área de Mensajes -->
-                    <div class="flex-grow p-6 overflow-y-auto bg-[#F4F6FA]" id="chat-messages-area">
-                        ${messagesHtml}
-                    </div>
-                    
-                    <!-- Caja de Texto -->
-                    <div class="p-4 bg-white border-t border-gray-100 flex gap-3 items-center">
-                        <button class="text-gray-400 hover:text-brand-purple transition" onclick="showToast('Envío de imágenes próximamente')"><i class="fa-solid fa-paperclip text-xl"></i></button>
-                        <input type="text" id="chat-input" placeholder="Escribe un mensaje seguro..." class="flex-grow bg-gray-100 border border-transparent rounded-full px-6 py-3 outline-none focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-purple-100 transition" onkeypress="if(event.key === 'Enter') sendChatMessage('${chatId}')" autocomplete="off">
-                        <button onclick="sendChatMessage('${chatId}')" class="bg-brand-purple hover:bg-purple-600 text-white w-12 h-12 rounded-full flex items-center justify-center transition shadow-lg transform hover:scale-105">
-                            <i class="fa-solid fa-paper-plane"></i>
-                        </button>
+                <div class="fade-in max-w-3xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+                    <h2 class="text-2xl font-bold mb-6 border-b pb-4">Mis Conversaciones</h2>
+                    <div class="divide-y divide-gray-100">
+                        ${myChats.map(c => {
+                            const otherPerson = c.buyerEmail === db.currentUser.email ? c.sellerEmail : c.buyerEmail;
+                            const lastMsg = c.messages.length > 0 ? c.messages[c.messages.length-1].text : 'Comenzar chat...';
+                            return `
+                                <div class="py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 px-2 rounded-lg" onclick="renderChatRoom('${c.id}')">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-brand-purple text-white rounded-full flex items-center justify-center font-bold">${otherPerson.charAt(0).toUpperCase()}</div>
+                                        <div>
+                                            <p class="font-bold text-gray-800">${otherPerson}</p>
+                                            <p class="text-xs text-brand-blue font-medium mb-1">Prod: ${c.productName}</p>
+                                            <p class="text-sm text-gray-500 truncate w-48">${lastMsg}</p>
+                                        </div>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             `;
-            
-            // Hacer scroll automático hacia el último mensaje
-            setTimeout(() => {
-                const area = document.getElementById('chat-messages-area');
-                if(area) area.scrollTop = area.scrollHeight;
-            }, 50);
         };
 
-        window.sendChatMessage = function(chatId) {
+        window.renderChatRoom = function(chatId) {
+            const chat = db.chats.find(c => c.id === chatId);
+            if(!chat) return;
+
+            appContent.innerHTML = `
+                <div class="fade-in max-w-2xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[600px]">
+                    <!-- Cabecera del chat -->
+                    <div class="bg-brand-dark text-white p-4 flex items-center gap-4">
+                        <button onclick="renderChats()" class="text-gray-300 hover:text-white"><i class="fa-solid fa-arrow-left"></i></button>
+                        <div>
+                            <h3 class="font-bold leading-tight">${chat.productName}</h3>
+                            <p class="text-xs text-gray-400">Chat privado y seguro</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Mensajes -->
+                    <div class="flex-grow p-4 overflow-y-auto bg-gray-50 space-y-4" id="chat-box">
+                        ${chat.messages.length === 0 ? '<p class="text-center text-xs text-gray-400 mt-10">Envía el primer mensaje para consultar sobre el producto.</p>' : ''}
+                        ${chat.messages.map(m => `
+                            <div class="flex ${m.sender === db.currentUser.email ? 'justify-end' : 'justify-start'}">
+                                <div class="max-w-[70%] rounded-2xl px-4 py-2 ${m.sender === db.currentUser.email ? 'bg-brand-purple text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'}">
+                                    <p class="text-sm">${m.text}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <!-- Input -->
+                    <div class="p-4 bg-white border-t border-gray-100 flex gap-2">
+                        <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." class="flex-grow border border-gray-300 rounded-full px-4 outline-none focus:border-brand-purple" onkeypress="if(event.key === 'Enter') sendMessage('${chat.id}')">
+                        <button onclick="sendMessage('${chat.id}')" class="bg-brand-purple text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-purple-600 transition"><i class="fa-solid fa-paper-plane text-sm"></i></button>
+                    </div>
+                </div>
+            `;
+            // Scroll al fondo
+            const box = document.getElementById('chat-box');
+            box.scrollTop = box.scrollHeight;
+        };
+
+        window.sendMessage = function(chatId) {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if(!text) return;
 
             const chat = db.chats.find(c => c.id === chatId);
-            if(chat) {
-                chat.messages.push({
-                    sender: db.currentUser.email,
-                    text: text,
-                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            chat.messages.push({ sender: db.currentUser.email, text: text, time: Date.now() });
+            saveDB();
+            renderChatRoom(chatId);
+        };
+
+
+        // --- STREAMING_CHUNK: Panel Vendedor y KYC Legal ---
+        window.renderSellerDashboard = function() {
+            if(!db.currentUser) return showModal('login');
+            
+            // VERIFICACIÓN KYC (Conoce a tu cliente)
+            const kycStatus = db.kycRequests.find(req => req.email === db.currentUser.email);
+
+            if(!kycStatus || kycStatus.status === 'rejected') {
+                appContent.innerHTML = `
+                    <div class="fade-in max-w-2xl mx-auto bg-white rounded-3xl p-10 shadow-sm border border-gray-100">
+                        <div class="text-center mb-8">
+                            <i class="fa-solid fa-shield-halved text-5xl text-brand-purple mb-4"></i>
+                            <h2 class="text-2xl font-bold mb-2">Verificación de Identidad Obligatoria</h2>
+                            <p class="text-gray-500 text-sm">Por tu seguridad y la de los compradores, requerimos verificar tu identidad antes de permitirte publicar productos.</p>
+                        </div>
+                        
+                        <form onsubmit="submitKYC(event)" class="space-y-6">
+                            <div>
+                                <label class="font-bold text-sm block mb-2">¿Qué tipo de vendedor eres?</label>
+                                <select id="kyc-type" class="w-full border p-3 rounded-xl bg-gray-50 outline-none" onchange="toggleKYCFields()">
+                                    <option value="persona">Persona Natural</option>
+                                    <option value="empresa">Empresa / Tienda Registrada</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Campos Persona -->
+                            <div id="fields-persona" class="space-y-4">
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                    <p class="text-sm font-bold text-brand-blue mb-2"><i class="fa-solid fa-camera"></i> Foto de tu Cédula (Frente)</p>
+                                    <input type="file" id="kyc-id-front" accept="image/*" required class="text-sm w-full">
+                                </div>
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                    <p class="text-sm font-bold text-brand-blue mb-2"><i class="fa-solid fa-user"></i> Selfie de seguridad sosteniendo tu cédula</p>
+                                    <input type="file" id="kyc-selfie" accept="image/*" required class="text-sm w-full">
+                                </div>
+                            </div>
+                            
+                            <!-- Campos Empresa (Ocultos por defecto) -->
+                            <div id="fields-empresa" class="space-y-4 hidden">
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                    <p class="text-sm font-bold text-brand-blue mb-2"><i class="fa-solid fa-file-invoice"></i> Certificado RUT (Imagen o PDF)</p>
+                                    <input type="file" id="kyc-rut" accept="image/*,application/pdf" class="text-sm w-full">
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs text-gray-600">
+                                <label class="flex items-start gap-2 cursor-pointer">
+                                    <input type="checkbox" required class="mt-1">
+                                    <span><strong>Acuerdo Legal (Ley 1581 de 2012):</strong> Autorizo a CrediNova S.A.S. al tratamiento de mis datos personales y biométricos para fines de validación de identidad, prevención de fraudes y estudio de riesgo. Declaro que los documentos adjuntos son 100% reales.</span>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-brand-dark text-white font-bold py-4 rounded-xl shadow-lg">Enviar a Revisión</button>
+                        </form>
+                    </div>
+                `;
+                return;
+            }
+
+            if(kycStatus.status === 'pending') {
+                appContent.innerHTML = `
+                    <div class="fade-in max-w-lg mx-auto bg-white rounded-3xl p-10 shadow-sm border border-gray-100 text-center">
+                        <i class="fa-solid fa-clock-rotate-left text-6xl text-yellow-400 mb-6"></i>
+                        <h2 class="text-2xl font-bold mb-2">Tus datos están en revisión</h2>
+                        <p class="text-gray-500">Nuestro equipo está validando tu identidad. Esto suele tomar menos de 24 horas. Te avisaremos cuando tu tienda sea aprobada.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // SI ESTÁ APROBADO: Muestra su tienda
+            const myProducts = db.products.filter(p => p.sellerEmail === db.currentUser.email);
+            appContent.innerHTML = `
+                <div class="fade-in max-w-5xl mx-auto">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-3xl font-bold">Mi Tienda <span class="bg-brand-green text-white text-xs px-2 py-1 rounded-full align-middle ml-2"><i class="fa-solid fa-check"></i> Verificada</span></h2>
+                        <button onclick="renderNewProductForm()" class="bg-brand-purple text-white font-bold py-2 px-6 rounded-lg shadow-lg">+ Publicar Artículo</button>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                        ${myProducts.length === 0 ? '<p class="p-10 text-center text-gray-500">No tienes productos publicados. ¡Sube el primero!</p>' : ''}
+                        <ul class="divide-y divide-gray-100">
+                            ${myProducts.map(p => `
+                                <li class="p-4 flex justify-between items-center hover:bg-gray-50 transition">
+                                    <div class="flex items-center gap-4">
+                                        <img src="${p.image}" class="w-16 h-16 rounded-xl object-contain bg-gray-100 border border-gray-200">
+                                        <div>
+                                            <span class="font-bold text-gray-800 block">${p.name}</span>
+                                            <span class="text-sm font-medium text-brand-blue">${formatMoney(p.price)}</span>
+                                        </div>
+                                    </div>
+                                    <button onclick="deleteProduct('${p.id}')" class="text-red-400 hover:text-red-600 p-2"><i class="fa-solid fa-trash"></i></button>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        };
+
+        window.toggleKYCFields = function() {
+            const type = document.getElementById('kyc-type').value;
+            const p = document.getElementById('fields-persona');
+            const e = document.getElementById('fields-empresa');
+            
+            if(type === 'persona') { p.classList.remove('hidden'); e.classList.add('hidden'); p.querySelectorAll('input').forEach(i=>i.required=true); e.querySelectorAll('input').forEach(i=>i.required=false); }
+            else { e.classList.remove('hidden'); p.classList.add('hidden'); e.querySelectorAll('input').forEach(i=>i.required=true); p.querySelectorAll('input').forEach(i=>i.required=false); }
+        };
+
+        window.submitKYC = async function(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Escaneando...`;
+            btn.disabled = true;
+
+            // Simular subida y compresión de imágenes al sistema
+            const type = document.getElementById('kyc-type').value;
+            const file1 = type === 'persona' ? document.getElementById('kyc-id-front').files[0] : document.getElementById('kyc-rut').files[0];
+            const file2 = type === 'persona' ? document.getElementById('kyc-selfie').files[0] : null;
+
+            // Truco para leer los archivos locales como datos (Base64) en el prototipo
+            const toBase64 = file => new Promise((resolve, reject) => {
+                if(!file) return resolve('');
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+
+            const docImg1 = await toBase64(file1);
+            const docImg2 = await toBase64(file2);
+
+            setTimeout(() => {
+                db.kycRequests.push({
+                    email: db.currentUser.email,
+                    type: type,
+                    doc1: docImg1,
+                    doc2: docImg2,
+                    status: 'pending',
+                    date: new Date().toLocaleDateString()
                 });
                 saveDB();
-                renderChatRoom(chatId); // Recargar para ver el mensaje
+                showToast('Documentos enviados con éxito', 'success');
+                renderSellerDashboard();
+            }, 1500);
+        };
+
+        // --- STREAMING_CHUNK: Panel del Jefe (Administrador KYC) ---
+        window.renderAdminPanel = function() {
+            if(!db.currentUser || db.currentUser.email !== ADMIN_EMAIL) return;
+
+            const pending = db.kycRequests.filter(r => r.status === 'pending');
+
+            appContent.innerHTML = `
+                <div class="fade-in max-w-6xl mx-auto">
+                    <div class="bg-red-600 text-white p-6 rounded-3xl mb-8 flex items-center gap-4 shadow-xl">
+                        <i class="fa-solid fa-user-tie text-4xl"></i>
+                        <div>
+                            <h2 class="text-3xl font-black">Panel de Control (Jefe)</h2>
+                            <p class="font-medium text-red-100">Evalúa las solicitudes de nuevas tiendas.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        ${pending.length === 0 ? '<div class="bg-white p-10 rounded-3xl text-center text-gray-500 border border-gray-100">No hay tiendas pendientes por aprobar.</div>' : ''}
+                        
+                        ${pending.map(req => `
+                            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-6">
+                                <div class="w-full md:w-2/3">
+                                    <p class="font-bold text-lg text-brand-dark mb-1">Usuario: ${req.email}</p>
+                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider mb-4 inline-block">${req.type}</span>
+                                    
+                                    <div class="flex gap-4 overflow-x-auto p-2 bg-gray-50 rounded-xl border border-gray-100 mt-2">
+                                        <!-- Miniaturas clickeables para abrir en grande -->
+                                        ${req.doc1 ? `<img src="${req.doc1}" class="h-32 object-contain rounded shadow cursor-pointer hover:opacity-80" onclick="window.open('${req.doc1}')" title="Clic para agrandar">` : ''}
+                                        ${req.doc2 ? `<img src="${req.doc2}" class="h-32 object-contain rounded shadow cursor-pointer hover:opacity-80" onclick="window.open('${req.doc2}')" title="Clic para agrandar">` : ''}
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-2"><i class="fa-solid fa-magnifying-glass"></i> Clic en la imagen para verla en pantalla completa y verificar los datos.</p>
+                                </div>
+                                <div class="w-full md:w-1/3 flex flex-col justify-center gap-3 border-l md:pl-6 border-gray-100">
+                                    <button onclick="resolveKYC('${req.email}', 'approved')" class="bg-brand-green hover:bg-green-600 text-white font-black py-4 rounded-xl transition shadow flex items-center justify-center gap-2 text-lg"><i class="fa-solid fa-check"></i> APROBAR</button>
+                                    <button onclick="resolveKYC('${req.email}', 'rejected')" class="bg-white border-2 border-red-500 text-red-500 hover:bg-red-50 font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"><i class="fa-solid fa-xmark"></i> Rechazar (Fotos borrosas)</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        };
+
+        window.resolveKYC = function(email, action) {
+            const req = db.kycRequests.find(r => r.email === email);
+            if(req) {
+                req.status = action;
+                saveDB();
+                showToast(`Tienda ${action === 'approved' ? 'Aprobada' : 'Rechazada'}.`);
+                renderAdminPanel();
             }
         };
 
-        // --- STREAMING_CHUNK: Páginas Legales ---
-<!-- ... existing code ... -->
+        // --- STREAMING_CHUNK: Nuevo Producto (Galería y Compresión) ---
+        window.renderNewProductForm = function() {
+            appContent.innerHTML = `
+                <div class="fade-in max-w-3xl mx-auto bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100">
+                    <h2 class="text-2xl font-bold mb-6">Publicar Nuevo Artículo</h2>
+                    <form onsubmit="handlePublish(event)" class="space-y-5">
+                        <div>
+                            <label class="text-sm font-bold text-gray-700 block mb-1">Título del anuncio</label>
+                            <input required id="f-name" class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple" placeholder="Ej. Moto Yamaha MT09">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm font-bold text-gray-700 block mb-1">Precio Total (COP)</label>
+                                <input type="number" required id="f-price" class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple" placeholder="Sin puntos ni comas">
+                            </div>
+                            <div>
+                                <label class="text-sm font-bold text-gray-700 block mb-1">Categoría</label>
+                                <select id="f-cat" class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple bg-white">
+                                    <option value="Transportes">Transportes (Motos/Carros)</option>
+                                    <option value="Tecnología">Tecnología (Celulares/TV)</option>
+                                    <option value="Moda">Moda (Ropa/Accesorios)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 border-dashed">
+                            <label class="text-sm font-bold text-brand-blue block mb-2"><i class="fa-solid fa-images"></i> Subir Fotos (Hasta 4)</label>
+                            <input type="file" id="f-images" multiple accept="image/*" class="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-purple file:text-white hover:file:bg-purple-600">
+                            <p class="text-xs text-gray-500 mt-2">Puedes seleccionar varias fotos al mismo tiempo desde tu galería.</p>
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-bold text-gray-700 block mb-1">Descripción</label>
+                            <textarea required id="f-desc" rows="4" class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-brand-purple" placeholder="Modelo, año, detalles, estado..."></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-4 rounded-xl shadow-lg mt-4 text-lg transition">Publicar Anuncio</button>
+                    </form>
+                </div>
+            `;
+        };
+
+        window.handlePublish = async function(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Comprimiendo fotos...`;
+            btn.disabled = true;
+
+            const files = document.getElementById('f-images').files;
+            let imageBase64Array = [];
+
+            // Compresor de imágenes integrado
+            const compressImage = (file) => new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800; // Calidad óptima para web
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7)); // 70% calidad
+                    };
+                };
+            });
+
+            // Procesar todas las fotos seleccionadas (máx 4 para no saturar memoria en este prototipo)
+            const limit = Math.min(files.length, 4);
+            for(let i=0; i<limit; i++) {
+                const compressed = await compressImage(files[i]);
+                imageBase64Array.push(compressed);
+            }
+
+            const fallbackImage = 'https://placehold.co/400x400/ffffff/0d1324?text=Sin+Foto';
+
+            db.products.push({
+                id: 'PROD' + Date.now(),
+                name: document.getElementById('f-name').value,
+                price: parseInt(document.getElementById('f-price').value),
+                category: document.getElementById('f-cat').value,
+                image: imageBase64Array.length > 0 ? imageBase64Array[0] : fallbackImage,
+                images: imageBase64Array,
+                desc: document.getElementById('f-desc').value,
+                seller: db.currentUser.name,
+                sellerEmail: db.currentUser.email
+            });
+            
+            saveDB(); 
+            showToast('¡Producto publicado con éxito!');
+            renderSellerDashboard();
+        };
+
+        window.deleteProduct = function(id) {
+            if(confirm("¿Estás seguro de que quieres eliminar este anuncio?")) {
+                db.products = db.products.filter(p => p.id !== id);
+                saveDB();
+                renderSellerDashboard();
+            }
+        };
+
+        // --- STREAMING_CHUNK: Autenticación Modal ---
+        window.showModal = function(type) {
+            modalContainer.classList.remove('hidden');
+            setTimeout(() => modalContainer.classList.remove('opacity-0'), 10);
+            
+            if(type === 'login') {
+                modalContainer.innerHTML = `
+                    <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative">
+                        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+                        <h2 class="text-2xl font-bold mb-2">Iniciar Sesión</h2>
+                        <form onsubmit="handleLogin(event)" class="space-y-4 mt-6">
+                            <input type="email" id="l-email" required placeholder="Correo electrónico" class="w-full border border-gray-300 rounded-xl p-3 outline-none">
+                            <input type="password" id="l-pass" required placeholder="Contraseña" class="w-full border border-gray-300 rounded-xl p-3 outline-none">
+                            <button type="submit" class="w-full bg-brand-dark hover:bg-black text-white font-bold py-3 rounded-xl transition">Entrar</button>
+                        </form>
+                    </div>
+                `;
+            } else if (type === 'register') {
+                modalContainer.innerHTML = `
+                    <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative">
+                        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+                        <h2 class="text-2xl font-bold mb-2 text-brand-purple">Crear Cuenta</h2>
+                        <form onsubmit="handleRegister(event)" class="space-y-4 mt-6">
+                            <input type="text" id="r-name" required placeholder="Nombre completo o Tienda" class="w-full border border-gray-300 rounded-xl p-3 outline-none">
+                            <input type="email" id="r-email" required placeholder="Correo electrónico" class="w-full border border-gray-300 rounded-xl p-3 outline-none">
+                            <input type="password" id="r-pass" required placeholder="Crear contraseña" class="w-full border border-gray-300 rounded-xl p-3 outline-none">
+                            <button type="submit" class="w-full bg-brand-purple hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition shadow-lg mt-4">Registrarme</button>
+                        </form>
+                    </div>
+                `;
+            }
+        };
+
+        window.closeModal = function() {
+            modalContainer.classList.add('opacity-0');
+            setTimeout(() => { modalContainer.classList.add('hidden'); modalContainer.innerHTML=''; }, 300);
+        };
+
+        window.handleRegister = function(e) {
+            e.preventDefault();
+            const email = document.getElementById('r-email').value;
+            if(db.users.find(u => u.email === email)) return showToast('El correo ya existe', 'error');
+            
+            const newUser = { name: document.getElementById('r-name').value, email: email, pass: document.getElementById('r-pass').value };
+            db.users.push(newUser);
+            db.currentUser = newUser; 
+            saveDB(); closeModal(); showToast('¡Cuenta creada exitosamente!');
+        };
+
+        window.handleLogin = function(e) {
+            e.preventDefault();
+            const email = document.getElementById('l-email').value;
+            const pass = document.getElementById('l-pass').value;
+            const user = db.users.find(u => u.email === email && u.pass === pass);
+            
+            if(user) { db.currentUser = user; saveDB(); closeModal(); showToast('Bienvenido de vuelta'); renderHome(); } 
+            else { showToast('Credenciales incorrectas', 'error'); }
+        };
+
+        window.logout = function() { db.currentUser = null; saveDB(); renderHome(); showToast('Sesión cerrada'); };
+
+        // Iniciar
+        updateUI();
+        renderHome();
+    </script>
+</body>
+</html>
